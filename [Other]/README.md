@@ -145,3 +145,76 @@
 >
 > A: 
 
+# **[Getting Things Done by Julia Evans](https://jvns.ca/blog/2016/09/19/getting-things-done/)**
+## **Have a vision**
+I asked a coworker one time about how to have a vision if I wasn’t even sure what the Right Vision Was! He suggested **just picking a vision that seemed mostly reasonable and then moving that way until I learned more**. This was actually really helpful.
+
+## **Focus**
+Focus on one thing, maybe two.
+
+## **Learn how to break things down**
+I think this is how you get from ‘vision’ to ‘focus’ – **you can’t actually execute on all the parts of your vision at the same time**.
+
+## **Try to get something done every day**
+I should try to make at least some progress on the ***Important Thing* every day**. If I do that, then I’m definitely always getting stuff done.
+
+## **Talk to someone when I get stuck**
+Stop feeling bad when you stuck. Ask somebody. Asking questions is a superpower by the way.
+
+## **Don’t be scared of small problems**
+I’m trying to learn to be more optimistic and just think “ok, well, something weird happened, there are always weird things, it will be fine”. So far it’s working.
+
+## **Do whatever’s necessary**
+So it turns out to get things done I have to do a bunch of things that I do not know how to do and am not necessarily qualified to do. Usually I can just do these things and it is fine.
+
+## **Have deadlines**
+I think deadlines are helpful to see when something’s growing in scope uncontrollably or is taking a lot longer than you thought.
+
+## **Believe in yourself**
+It is pretty useful for me to believe that I can actually do the thing I’m setting out to do. That’s all. Often when I try to do a thing it turns out that I can do it, so this is basically reasonable.
+
+## **I can do a lot!**
+You'll never find out if you never try.
+
+
+# **[How do you decide what to work on by Julia Evans](https://jvns.ca/blog/2016/08/16/how-do-you-work-on-something-important/)**
+
+So the reason programmers sometimes get paid a lot of money, I think, is because we can build systems that leverage computers to do an unreasonable amount of work.
+
+But it takes a long time! Basically anything interesting that I work on takes, let’s say, 2-6 months. And it’s not too weird to work on projects that take even longer! One of my friends worked on the same thing for more than a year. And at the end he’d built a system for drawing transit maps that’s better than Google’s. This was really cool.
+
+So this means you can really only do a few things. And if one of those things doesn’t work out then that means that like a quarter of your work for the year is gone. This is okay, but it means it’s worth being thoughtful.
+
+What will have a lot of impact? What will help my company do better?
+
+When I started programming, I thought that people would tell me what code to write, and then I would write that code, and then that would be all. That is not how it’s been, even though certainly I get guidance along the way. I work for a place that gives its engineers a lot of autonomy.
+
+So instead, for me, it’s been more like:
+ - we have this one long-term goal, or three, or six
+ - also a bunch of minor problems of varying urgency
+ - now it’s up to you to figure out which ones would be good to solve right now
+ - also you have to figure out how to solve them
+ - also the problems might be impossible to solve
+ - and there are all these other external factors
+ - you get to talk to a bunch of people who have thought about these problems for a while to do it though!
+ - here’s 40 hours a week. go.
+
+## **Know what your goals are**
+When I don’t have a clear goal, I find it really really hard to get things done or decide what to do.
+
+## **Coming up with a focus is not that easy**
+So somehow I need to find a thing that is big enough and important enough to focus on (can i explain to my colleagues why i’m doing what i’m doing?), but also small enough that a single person (or small group) can make progress on it. And then it is way easier to write code towards that vision!
+
+## **There’s no one “right thing”**
+It’s about reliably finding useful things to work on that are within your capabilities, not finding a global optimum.
+
+If I only wrote globally optimal blog posts I would literally never publish anything.
+
+## **Believe it’s possible**
+One thing about working on long-term or ambitious projects is – you have to believe that you can do the project. If you start a cool year-long project, approximately 50 million things will go wrong along the way. Things you didn’t expect to break will break. And if you give up when you have a bad week or three weeks or somebody doesn’t believe that what you’re doing is right, you will never finish.
+
+I think this is a really important thing a mentor / more senior person can do for someone more junior. A lot of the time you can’t tell what’s possible and what’s impossible and what obstacles are fine and what obstacles are insurmountable. But this can be bootstrapped! If someone tells you “don’t worry, it’ll all work out!”, then you can start, and hit the problems, and ask for advice, and keep going, and emerge victorious.
+
+And once you have emerged victorious enough times (and failed enough times!), you can start to get a sense for which things will work and which things will not work, and decide where to persevere.
+
+So somehow working on an important thing and doing it well means you have to decide what your goals are and also build your own internal standards for whether or not you’ve met them. And other people can help you get started with that, but ultimately it’s up to you.
