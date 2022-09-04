@@ -1,6 +1,55 @@
 \documentclass[12pt,a4paper,oneside,draft]{report}
-\usepackage{titling}
+\usepackage{ragged2e}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\newcommand{\fakesection}[1]{% instead of /section
+  \par\refstepcounter{section}% Increase section counter
+  \sectionmark{#1}% Add section mark (header)
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}% Add section to ToC
+  % Add more content here, if needed.
+}
+
+\overfullrule=0pt % remove fucking black box that comes out of nowhere
 
 \begin{document}
-First document. This is a simple example, with no extra parameters or packages included.
+
+\titleformat{\chapter}[display] % Removing chapter header
+{\normalfont\bfseries}{}{0pt}{\Large}
+
+\begin{center}
+	Solutions for Introduction to Algorithms 2022, 4th edition. \\
+	\href{https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/pages/syllabus/}{link to MIT open course}
+\end{center}
+
+\chapter{}
+\fakesection{}
+\subsection{Describe your own real-world example that requires sorting. Describe one that
+requires finding the shortest distance between two points.}
+Sorting product tables by various parameters: date, price, etc. AABB collisions needs 
+to know shortest distance between two points in rectangle-circle case.
+
+\subsection{Other than speed, what other measures of efficiency might you need to consider in
+a real-world setting?}
+Memory.
+
+\subsection{Select a data structure that you have seen, and discuss its strengths and limitations.}
+Hash table. Operations \texttt{Search}, \texttt{Delete} and \texttt{Insert} 
+take $\mathcal{O}(1)$ time on average. However, database can degrade if it goes through a large number of collisions.
+
+\newpage
+
+\subsection{How are the shortest-path and traveling-salesperson problems given above similar?
+How are they different?}
+Both problems regard path finding with minimum cost. \\
+The are different in few things:
+\begin{itemize}
+	\item TSP is NP-complete while SPP is known P-complex
+	\item UPSOLVE
+\end{itemize}
+
+
+
+
+
 \end{document}
