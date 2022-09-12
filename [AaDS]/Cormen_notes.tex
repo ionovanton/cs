@@ -1,0 +1,19 @@
+\documentclass[12pt,a4paper,oneside,draft]{report}
+\usepackage{ragged2e}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\newcommand{\fakesection}[1]{% instead of /section
+  \par\refstepcounter{section}% Increase section counter
+  \sectionmark{#1}% Add section mark (header)
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}% Add section to ToC
+  % Add more content here, if needed.
+}
+
+\overfullrule=0pt
+
+\begin{document}
+
+b
+
+\end{document}

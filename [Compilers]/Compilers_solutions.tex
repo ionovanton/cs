@@ -1,0 +1,109 @@
+\documentclass[12pt,a4paper,oneside,draft]{report}
+\usepackage{ragged2e}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{multicol}
+
+\newcommand{\fakesection}[1]{% instead of /section
+  \par\refstepcounter{section}% Increase section counter
+  \sectionmark{#1}% Add section mark (header)
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}% Add section to ToC
+  % Add more content here, if needed.
+}
+
+\overfullrule=0pt % black box fix
+
+\begin{document}
+
+\titleformat{\chapter}[display] % Removing chapter header
+{\normalfont\bfseries}{}{0pt}{\Large}
+
+\begin{center}
+	Solutions for Dragon Book
+\end{center}
+
+\chapter{}
+\section{}
+\subsection{What is the difference between a compiler and an interpreter?}
+Whereas compiler translates program with source langauge to a program with target language, 
+interpreter on the other hand directly executes the operations specified in source program.
+
+\subsection{1.1.2 What are the advantages of: (a) a compiler over an interpreter 
+(b) an interpreter over a compiler?}
+\begin{enumerate}[label=(\alph*)]
+	\item Target program produced by a compiler is usually 
+	much faster than an interpreter at mapping inputs to outputs.
+	\item An interpreter can usually give better error diagnostics than a compiler, 
+	because it executes source program statement by statement.
+\end{enumerate}
+
+\subsection{What advantages are there to a language processing system in compiler 
+produces assembly language rather than machine language?}
+Assembly language is easier to produce as output and easier to debug.
+
+\subsection{A compiler that translates a high-level language into another high-level 
+language is called a source-to-source translator. What advantages are there to 
+using C as a target language for a compiler?}
+C compilers are avaliable for any platform, which makes your 
+language avaliable on any platform and architecture where C is avaliable. 
+C compilers optimize agressively aswell.
+
+\subsection{Describe some of the tasks that an assembler needs to perform.}
+\begin{enumerate}
+	\item Read input line from ASM file.
+	\item Parse the opcode.
+	\item Based on the opcode, ASM parser knows the next word. 
+	At this point it has 8 bits which needs to be translated into the instruction.
+	\item 8 bits is written to a binary file as two character hex number.
+	\item Repeat from step one until all instructions are processed.
+\end{enumerate}
+
+\newpage
+
+\fakesection{}
+\fakesection{}
+\subsection{Indicate which of the following terms apply 
+to which of the following languages:}
+\begin{multicols}{3}
+	\begin{enumerate}[label=\alph*)]
+	\item imperative
+	\item declarative
+	\item von Neumann
+	\item object-oriented
+	\item functional
+	\item third-generation
+	\item fourth-generation
+	\item scripting
+	\item [\vspace{\fill}]
+	\end{enumerate}
+\end{multicols}
+
+\begin{multicols}{5}
+	\begin{enumerate}[label=\arabic*)]
+		\item C
+		\item C++
+		\item Cobol
+		\item Fortran
+		\item Java
+		\item Lisp
+		\item ML
+		\item Perl
+		\item Python
+		\item VB
+	\end{enumerate}
+\end{multicols}
+
+
+\begin{itemize}
+	\item Scripting: Python, Perl
+	\item Declarative: ML
+	\item Functional: ML
+	\item Imperative: C, Java, Fortran
+	\item Object-oriented: C++, Java, VB
+	\item Von-Neumann: C, Fortran
+	\item Third-generation: Fortran, Cobol, Lisp, C, C++, Java
+\end{itemize}
+
+
+\end{document}
