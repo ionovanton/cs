@@ -1,5 +1,4 @@
-## Progress
-![Progress](https://progress-bar.dev/0/?title=17/1200)
+## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=17/1200)
 ### [AaDS]
 ![Progress](https://progress-bar.dev/1/?title=1/100)
 ### [Compilers]

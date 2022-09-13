@@ -30,10 +30,8 @@ for s in ${files[@]}; do
 	cc=$(( cc + count ))
 done
 
-echo "## Progress"
-echo "![Progress](${template}/${pp}/?title=${cc}/${tt})"
 
-
+echo "## Progress &nbsp;&nbsp;![Progress](${template}/${pp}/?title=${cc}/${tt})"
 for s in ${files[@]}; do
 	name=${s%/*}
 	value=$(job $s $name)
