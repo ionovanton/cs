@@ -1,7 +1,7 @@
 ## Progress
-![Progress](https://progress-bar.dev/1/?title=16/1200)
+![Progress](https://progress-bar.dev/0/?title=17/1200)
 ### [AaDS]
-![Progress](https://progress-bar.dev/0/?title=0/100)
+![Progress](https://progress-bar.dev/1/?title=1/100)
 ### [Compilers]
 ![Progress](https://progress-bar.dev/6/?title=6/100)
 ### [Computer_Architecture]

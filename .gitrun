@@ -1,3 +1,3 @@
 #/bin/bash
-bash gen.sh > README.md;
+bash gen_progress.sh > README.md;
 git add .; git commit -m empty .; git push;

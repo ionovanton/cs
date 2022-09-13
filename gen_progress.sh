@@ -1,25 +1,5 @@
 #!bin/bash
 
-
-template="https://progress-bar.dev"
-r="README.md"
-name1="[AaDS]"
-name2="[Compilers]"
-name3="[Computer_Architecture]"
-name4="[Computer_Networking]"
-name5="[Databases]"
-name6="[Distributed_Systems]"
-name7="[Formal_Language_Math]"
-name8="[Linux]"
-name9="[Math]"
-name10="[Operating_Systems]"
-name11="[Profiling]"
-name12="[Programming]"
-
-
-declare -a src_array=("${name1}/${r}" "${name2}/${r}" "${name3}/${r}" "${name4}/${r}" "${name5}/${r}" "${name6}/${r}" "${name7}/${r}" "${name8}/${r}" "${name9}/${r}" "${name10}/${r}" "${name11}/${r}" "${name12}/${r}")
-echo "## Progress"
-
 job ()
 {
 	count=$(cat ${1} | awk 'FNR==2{ print $2 }')
@@ -31,7 +11,17 @@ job ()
 tt=0
 cc=0
 pp=0
-for s in ${src_array[@]}; do
+template="https://progress-bar.dev"
+r="README.md"
+declare -a files=()
+declare -a names=($(ls | grep "\["))
+for val in ${names[@]}; do
+	if [ "$val" != "[Other]" ]; then
+		files+=("${val}/${r}")
+	fi
+done
+
+for s in ${files[@]}; do
 	name=${s%/*}
 	value=$(job $s $name)
 	count=$(echo ${value} | awk '{ print $1 }')
@@ -39,11 +29,12 @@ for s in ${src_array[@]}; do
 	tt=$(( tt + total ))
 	cc=$(( cc + count ))
 done
-pp=$(awk "BEGIN { pc=100*${cc}/${tt}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
+
+echo "## Progress"
 echo "![Progress](${template}/${pp}/?title=${cc}/${tt})"
 
 
-for s in ${src_array[@]}; do
+for s in ${files[@]}; do
 	name=${s%/*}
 	value=$(job $s $name)
 	count=$(echo ${value} | awk '{ print $1 }')
