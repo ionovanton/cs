@@ -1,5 +1,6 @@
 #!bin/bash
 
+
 template="https://progress-bar.dev"
 r="README.md"
 name1="[AaDS]"
@@ -26,6 +27,21 @@ job ()
 	percent=$(awk "BEGIN { pc=100*${count}/${total}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
 	echo $count $total $percent
 }
+
+tt=0
+cc=0
+pp=0
+for s in ${src_array[@]}; do
+	name=${s%/*}
+	value=$(job $s $name)
+	count=$(echo ${value} | awk '{ print $1 }')
+	total=$(echo ${value} | awk '{ print $2 }')
+	tt=$(( tt + total ))
+	cc=$(( cc + count ))
+done
+pp=$(awk "BEGIN { pc=100*${cc}/${tt}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
+echo "![Progress](${template}/${pp}/?title=${cc}/${tt})"
+
 
 for s in ${src_array[@]}; do
 	name=${s%/*}
