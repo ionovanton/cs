@@ -82,7 +82,7 @@ There are two major programming paradigms that are declarative: functional progr
 \section*{Static vs. Dynamic scoping}
 
 \lstset{style=clanguage}
-Consider the following pseudocode with dynamic scoping.
+Consider the following pseudocode.
 \lstinputlisting{code/static\_dynamic\_scoping.c}
 
 \lstset{style=codeoutput}
@@ -98,6 +98,9 @@ Consider the following pseudocode with dynamic scoping.
 \end{lstlisting}
 
 Dynamic scope resolution is also essential for polymorphic procedures, those that have two or more definitions with the same name, depending only on types of the arguments.
+\\\indent A language uses \emph{static scope} or \emph{lexical scope} if it is possible to determine the scope of declaration by looking only at the program. Otherwise, the language uses \emph{dynamic scope}
+
+\newpage
 
 \section*{Names, Identifiers and Variables}
 \indent\indent An \emph{identifier} is a string of characters, typically letters or digits, that refer to (identifies) an entity, such as a data object, a procedure, a class, or a type. All identifiers are names, but not names are identifiers. Names can also be expressions. For example, the name \cc{x.y} might denote the field \cc{y} of a structure denoted by \cc{x}. Here, \cc{x} and \cc{y} are identifiers, while \cc{x.y} is a name, but not an identifier. Composite names like \cc{x.y} are called qualified names.
