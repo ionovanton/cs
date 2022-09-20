@@ -26,6 +26,9 @@
 \sethlcolor{codehlback}
 \newcommand{\cc}[1]{\texttt{#1}}
 
+% Code folder
+% \lstset{inputpath=../code}
+
 % Code style
 \lstdefinestyle{clanguage}{
     language=C,
@@ -80,22 +83,7 @@ There are two major programming paradigms that are declarative: functional progr
 
 \lstset{style=clanguage}
 Consider the following pseudocode with dynamic scoping.
-\begin{lstlisting}
-int x = 10;
-
-int f() {
-	return x;
-}
-
-int g() {
-	int x = 20;
-	return f();
-}
- 
-int main() {
-	printf(g());
-}
-\end{lstlisting}
+\lstinputlisting{code/static\_dynamic\_scoping.c}
 
 \lstset{style=codeoutput}
 \noindent Dynamic scope output:
@@ -114,5 +102,19 @@ Dynamic scope resolution is also essential for polymorphic procedures, those tha
 \section*{Names, Identifiers and Variables}
 \indent\indent An \emph{identifier} is a string of characters, typically letters or digits, that refer to (identifies) an entity, such as a data object, a procedure, a class, or a type. All identifiers are names, but not names are identifiers. Names can also be expressions. For example, the name \cc{x.y} might denote the field \cc{y} of a structure denoted by \cc{x}. Here, \cc{x} and \cc{y} are identifiers, while \cc{x.y} is a name, but not an identifier. Composite names like \cc{x.y} are called qualified names.
 \indent A \emph{variable} refers to a particular location of the store. It is common for the same identifier to be declared more than once. Each such declaration introduces a new variable. Even if each identifier declared just once, an identifier local to a recursive procedure will refer to different locations of the store at different times.
+
+\newpage
+\section*{Aliasing}
+\lstset{style=clanguage}
+\lstinputlisting{code/alias.c}
+\lstset{style=codeoutput}
+Output:
+\begin{lstlisting}
+q: x[1]=42	 y[1]=42
+t: x[1]=377	 y[1]=377
+p: x=9890	 y=1
+\end{lstlisting}
+
+
 
 \end{document}

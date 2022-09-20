@@ -4,6 +4,8 @@
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{multicol}
+\usepackage{amsmath}
+
 
 \newcommand{\fakesection}[1]{% instead of /section
   \par\refstepcounter{section}% Increase section counter
@@ -61,8 +63,8 @@ C compilers optimize agressively aswell.
 
 \newpage
 
-\fakesection{}
-\fakesection{}
+\fakesection{}\fakesection{}
+
 \subsection{Indicate which of the following terms apply 
 to which of the following languages:}
 \begin{multicols}{3}
@@ -96,14 +98,44 @@ to which of the following languages:}
 
 
 \begin{itemize}
-	\item Scripting: Python, Perl
-	\item Declarative: ML
-	\item Functional: ML
-	\item Imperative: C, Java, Fortran
-	\item Object-oriented: C++, Java, VB
-	\item Von-Neumann: C, Fortran
-	\item Third-generation: Fortran, Cobol, Lisp, C, C++, Java
+	\item[] Scripting: Python, Perl
+	\item[] Declarative: ML
+	\item[] Functional: ML
+	\item[] Imperative: C, Java, Fortran
+	\item[] Object-oriented: C++, Java, VB
+	\item[] Von-Neumann: C, Fortran
+	\item[] Third-generation: Fortran, Cobol, Lisp, C, C++, Java
 \end{itemize}
 
+\fakesection{}\fakesection{}\fakesection{}
+
+\subsection{For the block-structured C code of Fig. 1.13(a), indicate the values assigned to w, x, y, and z.}
+w = 13;	x = 11;	y = 13;	z = 11;
+\subsection{Repeat Exercise 1.6.1 for the code of Fig. 1.13(b).}
+w = 9; x = 7; y = 13; z = 11;
+
+\newpage
+
+\subsection{For the block-structured code of Fig. 1.14, assuming the usual static scoping of declarations, give the scope for each of the twelve declarations.}
+\begin{multicols}{3}
+	\begin{itemize}
+		\item[] $w_1$: B1 — B3
+		\item[] $x_1$: B1 — B2
+		\item[] $y_1$: B1 — B5
+		\item[] $z_1$: B1 — B2
+		\item[] $x_2$: B2 — B3
+		\item[] $z_2$: B2 — B3
+		\item[] $w_3$: B3
+		\item[] $x_3$: B3
+		\item[] $w_4$: B4 — B5
+		\item[] $x_4$: B4 — B5
+		\item[] $y_5$: B5
+		\item[] $z_5$: B5
+	\end{itemize}
+\end{multicols}
+
+\subsection{What is printed by the following C code?}
+3 2
 
 \end{document}
+
