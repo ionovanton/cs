@@ -1,10 +1,10 @@
-## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=6/5713)
+## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=10/5713)
 ### [3D]
 ![Progress](https://progress-bar.dev/0/?title=0/150)
 ### [AaDS]
 ![Progress](https://progress-bar.dev/0/?title=0/1610)
 ### [Compilers]
-![Progress](https://progress-bar.dev/2/?title=6/380)
+![Progress](https://progress-bar.dev/3/?title=10/380)
 ### [Computer_Architecture]
 ![Progress](https://progress-bar.dev/0/?title=0/430)
 ### [Computer_Networking]
