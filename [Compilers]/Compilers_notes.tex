@@ -8,6 +8,8 @@
 \usepackage{soul}
 \usepackage{courier}
 \usepackage{xcolor}
+\usepackage{varwidth}
+\usepackage[T1]{fontenc}
 \newcommand{\fakesection}[1]{% instead of /section
   \par\refstepcounter{section}% Increase section counter
   \sectionmark{#1}% Add section mark (header)
@@ -15,6 +17,11 @@
   % Add more content here, if needed.
 }
 \overfullrule=0pt
+
+% Defines
+\def\Plus{\texttt{+}}
+\def\Minus{\texttt{-}}
+
 
 % Custom colors
 \definecolor{codehlback}{gray}{0.9}
@@ -117,6 +124,56 @@ q: x[1]=42	 y[1]=42
 t: x[1]=377	 y[1]=377
 p: x=9890	 y=1
 \end{lstlisting}
+
+\newpage
+\section*{Syntax Definition}
+\begin{center}
+\textbf{if} ( expression ) statement \textbf {else} statement \\
+$\big\Downarrow$ \\
+\emph{stmt} $\rightarrow$ \textbf{if} ( \emph{expr} ) \emph{stmt} \textbf{else} \emph{stmt}
+\end{center}
+\indent\indent Such a rule is called a \emph{production}. In a production, lexical elements like the keyword \textbf{if} and the parentheses are called terminals. Variables like \emph{expr} and \emph{stmt} represent sequences of terminals and are called \emph{nonterminals}. \\
+
+A \emph{context-free} grammar has four components:
+\begin{enumerate}
+\item \emph{Terminal symbols} (\emph{tokens}) are literal symbols that may appear in the outputs of the production rules of a formal grammar and which cannot be changed using the rules of the grammar.
+\item \emph{Nonterminal symbols} (\emph{syntactic variables}) are those symbols that can be replaced.
+\item A set of \emph{productions}, where each production consists of nonterminal, called \emph{head} or \emph{left side}, and a sequence of terminals and/or nonterminals, called \emph{body} or \emph{right side}. Production rules may be used to generate strings, or to parse them. Each such rule has a head, or left-hand side, which consists of the string that may be replaced, and a body, or right-hand side, which consists of a string that may replace it. Rules are often written in the form head → body; e.g., the rule a → b specifies that a can be replaced by b.
+\item A designation of one of the nonterminals as the \emph{start} symbol.
+\end{enumerate}
+
+\noindent Simple calculator productions:
+\begin{center}
+\begin{varwidth}{\textwidth}
+\item[] \emph{list} $\rightarrow$ \emph{list} \Plus\ \emph{digit}
+\item[] \emph{list} $\rightarrow$ \emph{list} \Minus\ \emph{digit}
+\item[] \emph{list} $\rightarrow$ \emph{digit}
+\item[] \emph{digit} $\rightarrow$ 0 | 1 | 2 | 3 | 4  ... 8 | 9
+\end{varwidth}
+\end{center}
+Which can be grouped into:
+\begin{center}
+\begin{varwidth}{\textwidth}
+\item \emph{list} $\rightarrow$ \emph{list} \Plus\ \emph{digit} | \emph{list} \Minus\ \emph{digit}| \emph{digit}
+\end{varwidth}
+\end{center}
+According to conventions, the terminals of the grammar are symbols:
+\begin{center}
+\begin{varwidth}{\textwidth}
+\item \Plus\ \Minus\ 0 1 2 3 4 5 6 7 8 9
+\end{varwidth}
+\end{center}
+
+The nonterminals are the italicized names \emph{list} and \emph{digit}, with list being the start symbol because its production are given first.
+
+We say a production is for a nonterminal if the nonterminal is the head of the production. A string of terminals is a sequence of zero or more terminals. The string of zero terminals, written as $\epsilon$, is called the empty string.
+
+
+
+
+
+
+
 
 
 

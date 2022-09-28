@@ -1,4 +1,4 @@
-## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=10/5713)
+## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=30/5713)
 ### [3D]
 ![Progress](https://progress-bar.dev/0/?title=0/150)
 ### [AaDS]
@@ -18,7 +18,7 @@
 ### [Linux]
 ![Progress](https://progress-bar.dev/0/?title=0/164)
 ### [Math]
-![Progress](https://progress-bar.dev/0/?title=0/1928)
+![Progress](https://progress-bar.dev/1/?title=20/1928)
 ### [Operating_Systems]
 ![Progress](https://progress-bar.dev/0/?title=0/10)
 ### [Profiling]

@@ -1,5 +1,5 @@
 ##	Progress
-###	0 / 1928
+###	20 / 1928
 
 ## MathProfi (First Year)
 ### 0 / 933
@@ -8,5 +8,5 @@
 ### 0 / 208
 
 ## Math for Computer Science (Eric Lehman)
-### 0 / 787
+### 20 / 787
 
