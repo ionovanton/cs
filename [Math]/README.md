@@ -1,8 +1,9 @@
 ##	Progress
-###	35 / 1928
+###	57 / 1928
 
 ## MathProfi (First Year)
-### 15 / 933
+### 37 / 933
+Бесконечно малые функции
 
 ## Discrete Mathematics (lecture notes by László Lovász)
 ### 0 / 208
