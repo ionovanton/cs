@@ -1,9 +1,9 @@
 ##	Progress
-###	57 / 1928
+###	70 / 1928
 
 ## MathProfi (First Year)
-### 37 / 933
-Бесконечно малые функции
+### 50 / 933
+Правила Лопиталя
 
 ## Discrete Mathematics (lecture notes by László Lovász)
 ### 0 / 208
