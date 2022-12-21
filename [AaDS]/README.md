@@ -1,10 +1,10 @@
 ##	Progress
-###	19 / 1610
+###	31 / 1610
 
 ## Cormen
 ### General
-19 / 963
-stopped at 2.2-4 (page 34)
+31 / 963
+stopped at chapter 3
 
 ### Appendix: Mathematical Background
 0 / 105
