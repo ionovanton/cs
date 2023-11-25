@@ -14,11 +14,9 @@ pp=0
 template="https://progress-bar.dev"
 r="README.md"
 declare -a files=()
-declare -a names=($(ls | grep "\["))
+declare -a names=($(ls | grep -Ev '.sh|.md'))
 for val in ${names[@]}; do
-	if [ "$val" != "[Other]" ]; then
-		files+=("${val}/${r}")
-	fi
+  files+=("${val}/${r}")
 done
 
 for s in ${files[@]}; do

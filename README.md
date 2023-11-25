@@ -1,29 +1,39 @@
-## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=122/5713)
-### [3D]
-![Progress](https://progress-bar.dev/7/?title=11/150)
-### [AaDS]
+## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=181/6598)
+### AaDS
 ![Progress](https://progress-bar.dev/2/?title=31/1610)
-### [Compilers]
+### Compilers
 ![Progress](https://progress-bar.dev/3/?title=10/380)
-### [Computer_Architecture]
-![Progress](https://progress-bar.dev/0/?title=0/430)
-### [Computer_Networking]
-![Progress](https://progress-bar.dev/0/?title=0/368)
-### [Databases]
+### Computer
+![Progress](https://progress-bar.dev//?title=/)
+### Architecture
+![Progress](https://progress-bar.dev//?title=/)
+### Computer
+![Progress](https://progress-bar.dev//?title=/)
+### Networking
+![Progress](https://progress-bar.dev//?title=/)
+### Databases
 ![Progress](https://progress-bar.dev/0/?title=0/163)
-### [Distributed_Systems]
+### Distributed_Systems
 ![Progress](https://progress-bar.dev/0/?title=0/11)
-### [Formal_Language_Math]
-![Progress](https://progress-bar.dev/0/?title=0/81)
-### [Linux]
-![Progress](https://progress-bar.dev/0/?title=0/164)
-### [Math]
+### Formal
+![Progress](https://progress-bar.dev//?title=/)
+### Language
+![Progress](https://progress-bar.dev//?title=/)
+### Math
 ![Progress](https://progress-bar.dev/4/?title=70/1928)
-### [Operating_Systems]
-![Progress](https://progress-bar.dev/0/?title=0/10)
-### [Profiling]
+### Linux
+![Progress](https://progress-bar.dev/0/?title=0/164)
+### Math
+![Progress](https://progress-bar.dev/4/?title=70/1928)
+### Operating
+![Progress](https://progress-bar.dev//?title=/)
+### Systems
+![Progress](https://progress-bar.dev//?title=/)
+### Profiling
 ![Progress](https://progress-bar.dev/0/?title=0/58)
-### [Programming]
+### Programming
 ![Progress](https://progress-bar.dev/0/?title=0/356)
-### [Version_Control]
-![Progress](https://progress-bar.dev/0/?title=0/4)
+### Version
+![Progress](https://progress-bar.dev//?title=/)
+### Control
+![Progress](https://progress-bar.dev//?title=/)
