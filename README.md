@@ -1,39 +1,27 @@
-## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=181/6598)
-### AaDS
+## Progress &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=111/5563)
+### aads
 ![Progress](https://progress-bar.dev/2/?title=31/1610)
-### Compilers
+### compilers
 ![Progress](https://progress-bar.dev/3/?title=10/380)
-### Computer
-![Progress](https://progress-bar.dev//?title=/)
-### Architecture
-![Progress](https://progress-bar.dev//?title=/)
-### Computer
-![Progress](https://progress-bar.dev//?title=/)
-### Networking
-![Progress](https://progress-bar.dev//?title=/)
-### Databases
+### computer-architecture
+![Progress](https://progress-bar.dev/0/?title=0/430)
+### computer-network
+![Progress](https://progress-bar.dev/0/?title=0/368)
+### databases
 ![Progress](https://progress-bar.dev/0/?title=0/163)
-### Distributed_Systems
+### distributed-systems
 ![Progress](https://progress-bar.dev/0/?title=0/11)
-### Formal
-![Progress](https://progress-bar.dev//?title=/)
-### Language
-![Progress](https://progress-bar.dev//?title=/)
-### Math
-![Progress](https://progress-bar.dev/4/?title=70/1928)
-### Linux
+### formal-language-math
+![Progress](https://progress-bar.dev/0/?title=0/81)
+### linux
 ![Progress](https://progress-bar.dev/0/?title=0/164)
-### Math
+### math
 ![Progress](https://progress-bar.dev/4/?title=70/1928)
-### Operating
-![Progress](https://progress-bar.dev//?title=/)
-### Systems
-![Progress](https://progress-bar.dev//?title=/)
-### Profiling
+### operating-systems
+![Progress](https://progress-bar.dev/0/?title=0/10)
+### profiling
 ![Progress](https://progress-bar.dev/0/?title=0/58)
-### Programming
+### programming
 ![Progress](https://progress-bar.dev/0/?title=0/356)
-### Version
-![Progress](https://progress-bar.dev//?title=/)
-### Control
-![Progress](https://progress-bar.dev//?title=/)
+### version-control
+![Progress](https://progress-bar.dev/0/?title=0/4)
