@@ -1,15 +1,7 @@
-##	Progress
-###	31 / 1610
-
-## Cormen
-### General
-31 / 963
-stopped at chapter 3
-
-### Appendix: Mathematical Background
-0 / 105
-
-
-## Skiena
-0 / 542
-
+## aads &nbsp;&nbsp;![aads](https://progress-bar.dev/2/?title=31/1506)
+### skiena
+![skiena](https://progress-bar.dev/0/?title=0/542)
+### cormen 4
+![cormen 4](https://progress-bar.dev/3/?title=31/963)
+### Competitive Programmer’s Handbook
+![Competitive Programmer’s Handbook](https://progress-bar.dev/0/?title=0/1)

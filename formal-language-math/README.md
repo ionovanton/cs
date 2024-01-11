@@ -1,6 +1,5 @@
-##	Progress
-###	0 / 81
-
-## ВМК
-### 0 / 81
-
+## formal-language-math &nbsp;&nbsp;![formal-language-math](https://progress-bar.dev/0/?title=0/2)
+### pentus
+![pentus](https://progress-bar.dev/0/?title=0/1)
+### formal languages translation theory
+![formal languages translation theory](https://progress-bar.dev/0/?title=0/1)
