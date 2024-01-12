@@ -3,6 +3,7 @@
 *.swp
 .DS_Store
 *.o*
+.vscode
 
 ## Core latex/pdflatex auxiliary files:
 *.aux

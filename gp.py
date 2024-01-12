@@ -1,11 +1,9 @@
 import os
 
+excludeFolder = ['src']
 readmeName = "README.md"
 headerTemplate = ['## ', 'FOLDER_NAME', ' &nbsp;&nbsp;![', 'FOLDER_NAME', '](https://progress-bar.dev/', 'UNIT_PERCENT', '/?title=', 'UNIT_DONE', '/', 'UNIT_TOTAL', ')\n']
 unitTemplate = ['### ', 'FOLDER_NAME', '\n![', 'FOLDER_NAME', '](https://progress-bar.dev/', 'UNIT_PERCENT', '/?title=', 'UNIT_DONE', '/', 'UNIT_TOTAL', ')\n']
-# ## cs &nbsp;&nbsp;![Progress](https://progress-bar.dev/0/?title=111/5563)
-### aads
-# ![Progress](https://progress-bar.dev/2/?title=31/1610)
 
 def generate(currentPath: str, currentFolder: str) -> list[int, int]:
     readmePath = currentPath + '/' + readmeName
@@ -14,7 +12,7 @@ def generate(currentPath: str, currentFolder: str) -> list[int, int]:
         x for x in listdirs
         if os.path.isdir(currentPath + '/' + x) is True
         and x[0] != '.'
-        and x != 'archive'
+        and x not in excludeFolder
     ]
     unitDone, unitTotal = 0, 0
     if len(dirs) != 0:
@@ -59,7 +57,6 @@ def generate(currentPath: str, currentFolder: str) -> list[int, int]:
         with open(readmePath) as file:
             head = [next(file) for _ in range(2)]
             splitString = str.split(head[1])
-        # parse total and done
         unitDone, unitTotal = int(splitString[1]), int(splitString[3])
     return [unitDone, unitTotal]
 

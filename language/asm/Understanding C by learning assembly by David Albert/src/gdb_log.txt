@@ -1,0 +1,82 @@
+Reading symbols from ./a.out...
+Quit
+Reading symbols from ./a.out...
+Breakpoint 1 at 0x1171: file test.c, line 6.
+Starting program: /home/anton/Desktop/asm/src/a.out 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:6
+"hook-next""hook-next""hook-next""hook-next"Reading symbols from ./a.out...
+
+Starting program: /home/anton/Desktop/asm/src/a.out 
+
+Breakpoint 1, main () at test.c:6
+Reading symbols from ./a.out...
+Function "m" not defined.
+Breakpoint 1 at 0x1171: file test.c, line 7.
+Starting program: /home/anton/Desktop/asm/src/a.out 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:7
+"hook-next""hook-next""hook-next""hook-next""hook-next""hook-next""hook-step""hook-step""hook-step"Breakpoint 2 at 0x5555555551c9: file test.c, line 16.
+Continuing.
+
+Breakpoint 2, main () at test.c:16
+"hook-step""hook-step"A syntax error in expression, near `$sp'.
+0x7fffffffe290:	0
+A syntax error in expression, near `$sp'.
+0x7fffffffe290:	0	0	0	0	0	0	0	0
+0x7fffffffe298:	0	0	0	0	5	0	0	0
+0x7fffffffe2a0:	-96	-110	85	85	85	85	0	0
+0x7fffffffe2a8:	64	107	-2	-9	-1	127	97	98
+0x7fffffffe2b0:	99	100	101	0	0	0	0	0
+0x7fffffffe2b8:	0	70	83	87	-59	-31	-86	50
+0x7fffffffe2c0:	1	0	0	0	0	0	0	0
+0x7fffffffe2c8:	-48	2	-35	-9	-1	127	0	0
+0x7fffffffe2d0:	-64	-29	-1	-1	-1	127	0	0
+0x7fffffffe2d8:	105	81	85	85	85	85	0	0
+0x7fffffffe290:	0x00	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+0x7fffffffe298:	0x00	0x00	0x00	0x00	0x05	0x00	0x00	0x00
+0x7fffffffe2a0:	0xa0	0x92	0x55	0x55	0x55	0x55	0x00	0x00
+0x7fffffffe2a8:	0x40	0x6b	0xfe	0xf7	0xff	0x7f	0x61	0x62
+0x7fffffffe2b0:	0x63	0x64	0x65	0x00	0x00	0x00	0x00	0x00
+0x7fffffffe2b8:	0x00	0x46	0x53	0x57	0xc5	0xe1	0xaa	0x32
+0x7fffffffe2c0:	0x01	0x00	0x00	0x00	0x00	0x00	0x00	0x00
+0x7fffffffe2c8:	0xd0	0x02	0xdd	0xf7	0xff	0x7f	0x00	0x00
+0x7fffffffe2d0:	0xc0	0xe3	0xff	0xff	0xff	0x7f	0x00	0x00
+0x7fffffffe2d8:	0x69	0x51	0x55	0x55	0x55	0x55	0x00	0x00
+0x7fffffffe2ae:	0x61
+0x7fffffffe2ae:	0x61
+$1 = "abcde\000\000\000\000"
+$2 = (char (*)[10]) 0x7fffffffe2ae
+Reading symbols from ./a.out...
+Breakpoint 1 at 0x1171: file test.c, line 7.
+Starting program: /home/anton/Desktop/asm/src/a.out 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:7
+"hook-nexti""hook-nexti"Starting program: /home/anton/Desktop/asm/src/a.out 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:7
+Reading symbols from ./a.out...
+Breakpoint 1 at 0x1171: file test.c, line 7.
+Starting program: /home/anton/Desktop/asm/src/a.out 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:7
+"hook-nexti"Reading symbols from ./a.out...
+Quit
+Reading symbols from ./a.out...
+Breakpoint 1 at 0x1171: file test.c, line 7.
+Starting program: /home/anton/Desktop/asm/src/a.out 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+Breakpoint 1, main () at test.c:7
+"hook-nexti""hook-nexti""hook-nexti""hook-nexti""hook-nexti""hook-nexti"

@@ -1,8 +1,10 @@
-## cs &nbsp;&nbsp;![cs](https://progress-bar.dev/2/?title=111/5266)
+## cs &nbsp;&nbsp;![cs](https://progress-bar.dev/2/?title=112/5270)
 ### computer-network
 ![computer-network](https://progress-bar.dev/0/?title=0/368)
 ### linux
 ![linux](https://progress-bar.dev/0/?title=0/4)
+### language
+![language](https://progress-bar.dev/25/?title=1/4)
 ### distributed-systems
 ![distributed-systems](https://progress-bar.dev/0/?title=0/1)
 ### version-control
