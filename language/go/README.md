@@ -1,3 +1,3 @@
-## go &nbsp;&nbsp;![go](https://progress-bar.dev/0/?title=0/1)
+## go &nbsp;&nbsp;![go](https://progress-bar.dev/25/?title=1/4)
 ### go manual
-![go manual](https://progress-bar.dev/0/?title=0/1)
+![go manual](https://progress-bar.dev/25/?title=1/4)
