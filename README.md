@@ -1,4 +1,4 @@
-## cs &nbsp;&nbsp;![cs](https://progress-bar.dev/2/?title=113/5273)
+## cs &nbsp;&nbsp;![cs](https://progress-bar.dev/2/?title=114/5273)
 ### distributed-systems
 ![distributed-systems](https://progress-bar.dev/0/?title=0/1)
 ### databases
@@ -10,7 +10,7 @@
 ### version-control
 ![version-control](https://progress-bar.dev/0/?title=0/4)
 ### language
-![language](https://progress-bar.dev/28/?title=2/7)
+![language](https://progress-bar.dev/42/?title=3/7)
 ### computer-architecture
 ![computer-architecture](https://progress-bar.dev/0/?title=0/430)
 ### math

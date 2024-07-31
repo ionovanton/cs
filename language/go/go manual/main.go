@@ -1,21 +1,40 @@
 package main
 
-import (
-	"fmt"
-	"reflect"
-	"unsafe"
-)
-
 func main() {
-	var slice []int //          -- len: 0, cap: 0, slice == nil: true, sliceHeader: &{0 0 0}
-	// slice := []int(nil)      -- len: 0, cap: 0, slice == nil: true, sliceHeader: &{0 0 0}
-	// slice := []int{}         -- len: 0, cap: 0, slice == nil: false, sliceHeader: &{4302501024 0 0}
-	// slice := make([]int, 0)  -- len: 0, cap: 0, slice == nil: false, sliceHeader: &{4302501024 0 0}
+	a := []int{1, 2, 3, 4, 5}
+	b := []int{42, 21}
 
-	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&slice))
+	// Expand
+	// Insert n elements at position i
+	// a: [1 2 3 4 5 0]
+	i, n := len(a), 1
+	a = append(a[:i], append(make([]int, n), a[i:]...)...)
 
-	fmt.Printf(
-		"len: %d, cap: %d, slice == nil: %t, sliceHeader: %v\n",
-		len(slice), cap(slice), slice == nil, sliceHeader,
-	)
+	// Extend
+	// Append n elements
+	// a: [1 2 3 4 5 0 0]
+	a = append(a, make([]int, n)...)
+
+	// Extend capacity
+	// Make sure there is space for next n elements
+	// len, cap = 7, 10 --> len, cap = 7, 12
+	n = 5
+	a = append(make([]int, 0, len(a)+n), a...)
+
+	// Insert
+	// b: [97 42 21]
+	i = 0
+	b = append(b, 0)
+	copy(b[i+1:], b[i:])
+	b[i] = 97
+
+	// In-place filtering
+	// This tricks uses the fact that a slice shares array and capacity as the original,
+	// so the storage is reused for filtered slice.
+	c := b[:0]
+	for _, x := range b {
+		if x < 50 {
+			c = append(c, x)
+		}
+	}
 }
