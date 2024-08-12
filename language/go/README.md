@@ -1,3 +1,3 @@
-## go &nbsp;&nbsp;![go](https://progress-bar.dev/50/?title=2/4)
+## go &nbsp;&nbsp;![go](https://progressbar-guibranco.vercel.app/8/?title=2/25)
 ### go manual
-![go manual](https://progress-bar.dev/50/?title=2/4)
+![go manual](https://progressbar-guibranco.vercel.app/8/?title=2/25)

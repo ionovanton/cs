@@ -1,3 +1,3 @@
-## version-control &nbsp;&nbsp;![version-control](https://progress-bar.dev/0/?title=0/4)
+## version-control &nbsp;&nbsp;![version-control](https://progressbar-guibranco.vercel.app/0/?title=0/4)
 ### progit
-![progit](https://progress-bar.dev/0/?title=0/4)
+![progit](https://progressbar-guibranco.vercel.app/0/?title=0/4)

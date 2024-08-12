@@ -1,9 +1,10 @@
 import os
 
+link = 'https://progressbar-guibranco.vercel.app/'
 excludeFolder = ['src']
 readmeName = "README.md"
-headerTemplate = ['## ', 'FOLDER_NAME', ' &nbsp;&nbsp;![', 'FOLDER_NAME', '](https://progress-bar.dev/', 'UNIT_PERCENT', '/?title=', 'UNIT_DONE', '/', 'UNIT_TOTAL', ')\n']
-unitTemplate = ['### ', 'FOLDER_NAME', '\n![', 'FOLDER_NAME', '](https://progress-bar.dev/', 'UNIT_PERCENT', '/?title=', 'UNIT_DONE', '/', 'UNIT_TOTAL', ')\n']
+headerTemplate = ['## ', 'FOLDER_NAME', ' &nbsp;&nbsp;![', 'FOLDER_NAME', '](', link, 'UNIT_PERCENT', '/?title=', 'UNIT_DONE', '/', 'UNIT_TOTAL', ')\n']
+unitTemplate = ['### ', 'FOLDER_NAME', '\n![', 'FOLDER_NAME', '](', link, 'UNIT_PERCENT', '/?title=', 'UNIT_DONE', '/', 'UNIT_TOTAL', ')\n']
 
 def generate(currentPath: str, currentFolder: str) -> list[int, int]:
     readmePath = currentPath + '/' + readmeName

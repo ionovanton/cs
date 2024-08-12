@@ -1,9 +1,9 @@
-## language &nbsp;&nbsp;![language](https://progress-bar.dev/42/?title=3/7)
+## language &nbsp;&nbsp;![language](https://progressbar-guibranco.vercel.app/10/?title=3/28)
 ### asm
-![asm](https://progress-bar.dev/100/?title=1/1)
+![asm](https://progressbar-guibranco.vercel.app/100/?title=1/1)
 ### go
-![go](https://progress-bar.dev/50/?title=2/4)
+![go](https://progressbar-guibranco.vercel.app/8/?title=2/25)
 ### cpp
-![cpp](https://progress-bar.dev/0/?title=0/1)
+![cpp](https://progressbar-guibranco.vercel.app/0/?title=0/1)
 ### make
-![make](https://progress-bar.dev/0/?title=0/1)
+![make](https://progressbar-guibranco.vercel.app/0/?title=0/1)

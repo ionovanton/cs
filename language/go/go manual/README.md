@@ -1,5 +1,5 @@
 ## Progress
-### 2 / 4
+### 2 / 25
 
 ## Slice
 ### https://go.dev/blog/slices
@@ -231,10 +231,44 @@ func main() {
 }
 ```
 
+TODO:
+1. interface
+  - internals
+  - type assertion
+  - in program archetecture
+  - placing: near implementation or in one separate file
+2. for range loop
+3. errors, panics and os.exit
+  - erros.As, errors.Is
+4. address semantics
+5. gc
+6. defer
+7. map
+8. strings
+9. closure
+10. marshalling internals
+  - custom marshalling
+11. goroutines and scheduler
+  - net poller
+  - context switch (including internals)
+  - internals
+  - GOMAXPROCS
+12. channels
+13. race condition and data race
+14. context
+15. select
+16. sync.Map
+17. rwmutex, mutex
+18. memory layout
+19. memory leaks
+20. pprof
+21. benchmarking
+22. effective go
+23. uber go code guideline
+24. avito go code guideline
 
-https://go.dev/blog/slices-intro
 
-https://research.swtch.com/godata
+
 ---
 ```go
 
