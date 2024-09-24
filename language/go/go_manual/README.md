@@ -831,7 +831,6 @@ Call `m.Meow()` with interface
 	0x0098 00152 (/Users/ayionov/Desktop/cs/language/go/go_manual/main.go:34)	CALL	(R2)
 	0x009c 00156 (/Users/ayionov/Desktop/cs/language/go/go_manual/main.go:34)	MOVH	R0, main.someMeowValue-50(SP)
 ```
-
 Call `m.Meow()` without interface
 ```
     0x0040 00064 (/Users/ayionov/Desktop/cs/language/go/go_manual/main.go:34)   MOVW    main.m-12(SP), R0
@@ -961,7 +960,7 @@ ok      go_manual/bench 2.544s
 ```
 Pure structure almost 30 times faster than interface analogue. Interface also results in 1 heap allocation per operation.
 
-Changing `Foo`'s `p` argument argument to a nonpointer `p pair` will lay different result
+Changing `Foo`'s `p` argument to a non-pointer `p pair` will lay different result
 ```
 goos: darwin
 goarch: arm64
@@ -977,8 +976,247 @@ ok      go_manual/bench 2.053s
 
 Almost 5 times faster now and no heap allocations this time. Perhaps compiler optimizes a call somehow.
 
+#### Why do `T` and `*T` have different method sets? https://gronskiy.com/posts/2020-04-golang-pointer-vs-value-methods/
+```go
+type T struct {
+}
 
+// Pointer type receiver
+func (receiver *T) pointerMethod() {
+	fmt.Printf("Pointer method called on \t%#v with address %p\n", *receiver, receiver)
+}
 
+// Value type receiver
+func (receiver T) valueMethod() {
+	fmt.Printf("Value method called on \t\t%#v with address %p\n", receiver, &receiver)
+}
+
+func main() {
+	var (
+		val     T  = T{}
+		pointer *T = &val
+	)
+
+	fmt.Printf("Value created \t\t\t%#v with address %p\n", val, &val)
+	fmt.Printf("Pointer created on \t\t%#v with address %p\n", *pointer, pointer)
+
+	val.valueMethod()
+	pointer.pointerMethod()
+}
+```
+```
+Value created                   main.T{} with address 0x102fa4820
+Pointer created on              main.T{} with address 0x102fa4820
+Value method called on          main.T{} with address 0x102fa4820
+Pointer method called on        main.T{} with address 0x102fa4820
+```
+
+##### How methods can be called on various receivers
+```go
+type T struct {
+}
+
+// Pointer type receiver
+func (receiver *T) pointerMethod() {
+	fmt.Printf("Pointer method called on \t%#v with address %p\n", *receiver, receiver)
+}
+
+// Value type receiver
+func (receiver T) valueMethod() {
+	fmt.Printf("Value method called on \t\t%#v with address %p\n", receiver, &receiver)
+}
+
+func main() {
+	var (
+		val     T  = T{}
+		pointer *T = &val
+	)
+
+	fmt.Printf("Value created \t\t\t%#v with address %p\n", val, &val)
+	fmt.Printf("Pointer created on \t\t%#v with address %p\n", *pointer, pointer)
+
+	pointer.valueMethod() // Implicitly converted to: (*pointer).valueMethod()
+	val.pointerMethod()   // Implicitly converted to: (&value).pointerMethod()
+}
+```
+```
+Value created                   main.T{} with address 0x100b94820
+Pointer created on              main.T{} with address 0x100b94820
+Value method called on          main.T{} with address 0x100b94820
+Pointer method called on        main.T{} with address 0x100b94820
+```
+
+How things are behaving while using a regular object
+
+| Method receiver type | On what objects can be called directly |
+|----------------------|----------------------------------------|
+| T                    | both T and *T                          |
+| *T                   | both T and *T                          |
+
+##### Interfaces
+```go
+type T struct {
+}
+
+type ValueMethodCaller interface {
+	valueMethod()
+}
+
+type PointerMethodCaller interface {
+	pointerMethod()
+}
+
+// Pointer type receiver
+func (receiver *T) pointerMethod() {
+	fmt.Printf("Pointer method called on \t%#v with address %p\n", *receiver, receiver)
+}
+
+// Value type receiver
+func (receiver T) valueMethod() {
+	fmt.Printf("Value method called on \t\t%#v with address %p\n", receiver, &receiver)
+}
+
+func callValueMethodOnInterface(v ValueMethodCaller) {
+	v.valueMethod()
+}
+
+func callPointerMethodOnInterface(p PointerMethodCaller) {
+	p.pointerMethod()
+}
+
+func main() {
+	var (
+		val     T  = T{}
+		pointer *T = &val
+	)
+
+	fmt.Printf("Value created \t\t\t%#v with address %p\n", val, &val)
+	fmt.Printf("Pointer created on \t\t%#v with address %p\n", *pointer, pointer)
+
+	callValueMethodOnInterface(pointer)
+	callPointerMethodOnInterface(pointer)
+	callValueMethodOnInterface(val)
+	callPointerMethodOnInterface(val) // compile error
+	// Cannot use 'val' (type T) as the type PointerMethodCaller
+	// Type does not implement 'PointerMethodCaller' as the 'pointerMethod' method has a pointer receiver
+}
+```
+
+| Method receiver type | On what objects can be called via interface |
+|----------------------|---------------------------------------------|
+| T                    | both T and *T                               |
+| *T                   | only *T                                     |
+
+Why this is the case?
+
+Formal answer goes from Go's language spec https://go.dev/ref/spec#Method_sets
+> The method set of any other type T consists of all methods declared with receiver type T.
+> The method set of the corresponding pointer type *T is the set of all methods declared with receiver *T or T (that is, it also contains the method set of T).
+
+Less formal answer
+
+Since Go interfaces are holding copies of original struct
+```go
+type iface struct {
+	tab  *itab
+	data unsafe.Pointer // here
+}
+```
+Passing object to a function which argument is an interface leads to implicit interface object creation
+> This distinction arises because if an interface value contains a pointer *T, a method call can obtain a value by dereferencing the pointer, 
+> but if an interface value contains a value T, there is no safe way for a method call to obtain a pointer. 
+> (Doing so would allow a method to modify the contents of the value inside the interface, which is not permitted by the language specification.)
+
+> Even in cases where the compiler could take the address of a value to pass to the method, if the method modifies the value the changes will be lost in the caller
+
+hence copying original struct to `iface`
+
+Imagine compiler wouldn't mind such code. We call `callPointerMethodOnInterface(val)` with intention to modify `val`
+```go
+var val T = T{}
+callPointerMethodOnInterface(val) // intention is to modify `val` object
+```
+
+But that wouldn't work since interface holds copy of an object (not a pointer!) at this point. Modifying copy of `val` leads to original `val` left unchanged.  
+
+Demonstration
+```go
+type T struct {
+	i int
+}
+
+type ValueMethodCaller interface {
+	valueMethod()
+}
+
+type PointerMethodCaller interface {
+	pointerMethod()
+}
+
+// Pointer type receiver
+func (receiver *T) pointerMethod() {
+	fmt.Printf("Pointer method called on \t%#v with address %p\n", *receiver, receiver)
+}
+
+// Value type receiver
+func (receiver T) valueMethod() {
+	fmt.Printf("Value method called on \t\t%#v with address %p\n", receiver, &receiver)
+}
+
+func callValueMethodOnInterface(v ValueMethodCaller) {
+	v.valueMethod()
+}
+
+func callPointerMethodOnInterface(p PointerMethodCaller) {
+	p.pointerMethod()
+}
+
+func main() {
+	var (
+		v  T                   = T{i: 42}
+		iv ValueMethodCaller   = v
+		ip PointerMethodCaller = &v // passing `v` leads to same compile error
+	)
+
+	v.i = 10 // Changing the original object
+
+	fmt.Printf("Original value: \t\t\t%#v\n", v)
+	fmt.Printf("ValueMethodCaller interface value: \t%#v\n", reflect.ValueOf(iv))
+	fmt.Printf("PointerMethodCaller interface value: \t%#v\n", reflect.ValueOf(ip))
+}
+```
+```
+Original value:                         main.T{i:10}
+ValueMethodCaller interface value:      main.T{i:42}  <--- left unchanged
+PointerMethodCaller interface value:    &main.T{i:10}
+```
+
+##### Why such implementation?
+Let’s check what happens if one just replaces one simple value in the interface by another simple value
+```go
+func main() {
+	var iface interface{} = (int32)(0)
+	// This takes address of the value. Unsafe but works. Not guaranteed to work
+	// after possible implementation change!
+	var px uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1] // take data unsafe.Pointer
+
+	iface = (int32)(1)
+	var py uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1]
+
+	fmt.Printf("First pointer %#v, second pointer %#v", px, py)
+}
+```
+```
+First pointer 0x104268a3c, second pointer 0x104267c60
+```
+
+It turns out, that every assignment to the interface changes the memory into which the value will be stored.
+This explains that the passage from the FAQ above
+> there is no safe way for a method call to obtain a pointer
+
+is justified by this implementation detail
+
+To summarize: with interfaces, it is prohibited to assign value to an interface which has pointer methods.
 
 
 # Escape analysis

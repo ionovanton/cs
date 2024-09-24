@@ -1,53 +1,48 @@
 package main
 
 import (
-	"testing"
+	"fmt"
+	"unsafe"
 )
 
-type pair struct {
-	first  int
-	second int
+type T struct {
+	i int
 }
 
-type InterFoo interface {
-	Foo(*pair) int
+type ValueMethodCaller interface {
+	valueMethod()
 }
 
-type Strct1 struct {
-	StrctValue int
+type PointerMethodCaller interface {
+	pointerMethod()
 }
 
-func (s Strct1) Foo(p *pair) int {
-	return s.StrctValue + p.first + p.second
+// Pointer type receiver
+func (receiver *T) pointerMethod() {
+	fmt.Printf("Pointer method called on \t%#v with address %p\n", *receiver, receiver)
 }
 
-type Strct2 struct {
-	StrctValue int
+// Value type receiver
+func (receiver T) valueMethod() {
+	fmt.Printf("Value method called on \t\t%#v with address %p\n", receiver, &receiver)
 }
 
-func (s Strct2) Foo(p *pair) int {
-	return s.StrctValue + p.first + p.second
+func callValueMethodOnInterface(v ValueMethodCaller) {
+	v.valueMethod()
 }
 
-func BenchmarkIface(b *testing.B) {
-	var resultIface int
-	b.Run("InterFoo", func(b *testing.B) {
-		var m InterFoo
-		m = Strct1{StrctValue: 6742}
-		for i := 0; i < b.N; i++ {
-			resultIface = m.Foo(&pair{i, i})
-		}
-	})
-	println(resultIface)
+func callPointerMethodOnInterface(p PointerMethodCaller) {
+	p.pointerMethod()
 }
 
-func BenchmarkStrct2(b *testing.B) {
-	var resultStrct2 int
-	b.Run("Strct2", func(b *testing.B) {
-		m := Strct2{6742}
-		for i := 0; i < b.N; i++ {
-			resultStrct2 = m.Foo(&pair{i, i})
-		}
-	})
-	println(resultStrct2)
+func main() {
+	var iface interface{} = (int32)(0)
+	// This takes address of the value. Unsafe but works. Not guaranteed to work
+	// after possible implementation change!
+	var px uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1]
+
+	iface = (int32)(1)
+	var py uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1]
+
+	fmt.Printf("First pointer %#v,  second pointer %#v", px, py)
 }
