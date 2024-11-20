@@ -1,5 +1,5 @@
 ## Progress
-### 2 / 25
+### 1 / 27
 
 # Slice
 ## https://go.dev/blog/slices
@@ -868,8 +868,11 @@ type itab struct {
 Look at complete `itab`
 
 Section offset   is 0x0000000000070000 = 458752
+
 Section vma      is 0x0000000000080000 = 524288
+
 Itab symbol vma  is 0x00000000000AF440 = 717888
+
 Itab symbol size is 0x0000000000000030 = 48
 
 `symbol offset = 717888 - 524288 + 458752 = 652352`
@@ -1198,7 +1201,7 @@ func main() {
 	var iface interface{} = (int32)(0)
 	// This takes address of the value. Unsafe but works. Not guaranteed to work
 	// after possible implementation change!
-	var px uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1] // take data unsafe.Pointer
+	var px uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1] // take `data unsafe.Pointer` from `iface`
 
 	iface = (int32)(1)
 	var py uintptr = (*[2]uintptr)(unsafe.Pointer(&iface))[1]
@@ -1216,7 +1219,614 @@ This explains that the passage from the FAQ above
 
 is justified by this implementation detail
 
-To summarize: with interfaces, it is prohibited to assign value to an interface which has pointer methods.
+To summarize:
+1. With interfaces, it is prohibited to assign value to an interface which has pointer methods
+2. Interface values always holds a copy, hence calling pointer method 
+on a copy does not make sense for the purposes of modifying the original caller
+
+
+# Golang address operator
+```go
+func main() {
+	a := 1
+	x := &a //   *int
+	y := &x //  **int
+	z := &y // ***int
+	a = 2
+
+	fmt.Printf("%p %d\n%p %d\n%p %d\n", x, *x, *y, **y, **z, ***z)
+}
+```
+```
+0x1400009a020 2
+0x1400009a020 2
+0x1400009a020 2
+```
+
+```go
+type T struct {
+	value int
+}
+
+func main() {
+	a := (*T)(nil) //    *T
+	x := &a        //   **T
+	y := &x        //  ***T
+	z := &y        // ****T
+	a = &T{42}
+
+	fmt.Printf("%p %d\n%p %d\n%p %d\n", *x, **x, **y, ***y, ***z, ****z)
+}
+```
+```
+0x14000102020 {42}
+0x14000102020 {42}
+0x14000102020 {42}
+```
+
+
+# Regular `for range` loop
+### What is output of this program and why?
+
+```go
+func main() {
+    s := []int{1, 4, 6}
+    for i, x := range s { // makes copy of `s`
+        if i == 0 {
+            s = []int{42, 89, 135}
+		}
+        println(x)
+    }
+}
+```
+```
+1
+4
+6
+```
+
+The program above roughly translates to
+```go
+func main() {
+    s := []int{1, 4, 6}
+	temp := s
+    for i, x := range temp { // makes copy of `s`
+        if i == 0 {
+            s = []int{42, 89, 135}
+		}
+        println(x)
+    }
+}
+```
+
+# `error`, `panic` and `os.Exit()`
+
+## `panic` – either unexpected error that one could recover from or programmer error https://eli.thegreenplace.net/2018/on-the-uses-and-misuses-of-panics-in-go/
+### unexpected error
+When `panic` is called in `F` function:
+1. `F` stops execution imideately
+2. `F` calls defered functions
+3. `F` will pass `panic` to its caller causing stack unwinding
+4. Call stack unwinding continues until it reaches the top of the stack or `recovery` function. The nonzero exit code is returned in case the top of the stack has been reached.
+This process is called *pani**ck**ing*.
+
+Intentions of Go's `panic` by Rob Pike:
+>Our proposal instead ties the handling to a function - a dying function - and thereby, deliberately, makes it harder to use. We want you think of panics as, well, panics! They are rare events that very few functions should ever need to think about. If you want to protect your code, one or two recover calls should do it for the whole program. If you're already worrying about discriminating different kinds of panics, you've lost sight of the ball.
+
+Truly exceptional cases should cause `panic` and they should be treated as its name suggests.
+
+As we know `panic` causes function to call all defered functions before returning. There comes a limitation regarding `recovery`.
+`recover` function that is outside of `defer` cannot be used to recover from panic. The code below will panic nontheless.
+```go
+func main() {
+	if r := recover(); r != nil {
+		fmt.Println("recovered")
+	}
+	panic("panic!!!")
+}
+```
+```
+panic: panic!!!
+
+goroutine 1 [running]:
+main.main()
+        main.go:11 +0x3c
+exit status 2
+```
+
+The function call ought to be put inside `defer` statement in order to successfuly recover from panic.
+```go
+func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("recovered")
+		}
+	}()
+	panic("panic!!!")
+}
+```
+```
+recovered
+```
+
+This limitation is coupled with an important coding guideline – keep panics withing the package boundaries. Public-facing functions should recover from panics and translate them into errors.
+
+### programmer error
+Some of the examples:
+- Violating array or slice boundaries
+- Closing channel twice
+- etc
+
+```go
+func main() {
+	s := make([]int, 0)
+	println(s[20])
+}
+```
+```
+panic: runtime error: index out of range [20] with length 0
+
+goroutine 1 [running]:
+main.main()
+        /main.go:5 +0x24
+exit status 2
+```
+
+## os.Exit() – immediate exit
+`Exit` causes the current programm to exit with the given status code. The program terminates immediately. Deferred functions are not run.
+
+There are some reasons why one would terminate programm immediately
+- Program has done everything it needed to do, and now just needs to exit
+- Some other reasons? I don't know.
+
+## `error` – error that should be handled
+Both `errors.Is` and `errors.As` traverse through wrapped errors and try to find its match. The key difference is:
+- `errors.Is` – is looking for exact match, both error type and its content (values)
+- `errors.As` – is looking for type match
+
+Example #1 – error is found by type and its value of `message`
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+type errorA struct {
+	message string
+}
+
+func (e errorA) Error() string {
+	return e.message
+}
+
+func main() {
+	err := foo()
+	if errors.Is(err, errorA{message: "foo"}) {
+		println("error is errorA")
+	} else {
+		println("nothing to report")
+	}
+}
+
+func foo() error {
+	if err := bar(); err != nil {
+		return fmt.Errorf("%w: %w", errors.New("error"), err)
+	}
+	return nil
+}
+
+func bar() error {
+	return errorA{message: "foo"}
+}
+```
+```
+error is errorA
+```
+
+Example #2 – although types are matching, the values are not the same, "foo" != "bar"
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+type errorA struct {
+	message string
+}
+
+func (e errorA) Error() string {
+	return e.message
+}
+
+func main() {
+	err := foo()
+	if errors.Is(err, errorA{message: "foo"}) {
+		println("error is errorA")
+	} else {
+		println("nothing to report")
+	}
+}
+
+func foo() error {
+	if err := bar(); err != nil {
+		return fmt.Errorf("%w: %w", errors.New("error"), err)
+	}
+	return nil
+}
+
+func bar() error {
+	return errorA{message: "bar"} // pay attention that message is different now!
+}
+```
+```
+nothing to report
+```
+
+There are sentinel and custom errors in Go.
+
+Sentinel errors are being expected errors, declared as global variable
+```go
+var ErrSavingItem = errors.New("saving item")
+```
+
+Custom errors are being unexpted errors that should implemet `error` interface
+```go
+type errorA struct {
+	message string
+}
+
+func (e errorA) Error() string {
+	return e.message
+}
+```
+
+Dependency problem
+You may introduce coupled dependency to some users of your package if they want to import your error types or sentinel errors.
+
+In order to avoid it, you may want to wrap your error in public API as `fmt.Errorf("%w: %v")`.
+Example:
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+type client struct {
+}
+
+func (c client) GetClients() ([]string, error) {
+	return nil, errors.New("error")
+}
+
+var ErrGetClients = errors.New("get clients")
+
+type Repo struct {
+	client client
+}
+
+func (r Repo) GetClients() ([]string, error) {
+	result, err := r.client.GetClients()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v")
+	}
+	return result, nil
+}
+
+func main() {
+	r := Repo{
+		client: client{},
+	}
+
+	_, err := r.GetClients()
+	if errors.Is(err, ErrGetClients) {
+		fmt.Println("error is error get clients")
+	} else {
+		fmt.Println("nothing to report")
+	}
+}
+```
+```
+nothing to report
+```
+
+Rules of thumb:
+1. Custom errors are unexpected and should be checked via `errors.As`
+2. Sentinel errors are expected and should be checked via `errors.Is`
+
+
+
+
+# Embedding in Go
+## structs in structs https://eli.thegreenplace.net/2020/embedding-in-go-part-1-structs-in-structs/
+
+```go
+package main
+
+import "fmt"
+
+type Base struct {
+	b int // is promoted field of Container
+}
+
+func (base Base) Describe() string {
+	return fmt.Sprintf("base %d belongs to us", base.b)
+}
+
+type Container struct { // Container is the embedding struct
+	Base // Base is the embedded struct
+	c    string
+}
+
+func main() {
+	co := Container{}
+	co.b = 1
+
+	fmt.Println(co.Describe())
+	/*
+
+		as if
+
+		type Container struct {
+			base Base
+			c string
+		}
+
+		func (cont Container) Describe() string {
+			return cont.base.Describe()
+		}
+
+	*/
+}
+```
+```
+base 1 belongs to us
+```
+
+### Example: `sync.Mutex`
+
+```go
+type lruSessionCache struct {
+	sync.Mutex
+	m        map[string]*list.Element
+	q        *list.List
+	capacity int
+}
+```
+
+We might use this method if `lruSessionCache` introduces public API for external users. It is convenient and removes the need for explicit forwarding methods.
+```go
+package main
+
+import (
+	"container/list"
+	"sync"
+)
+
+type lruSessionCache struct {
+	sync.Mutex
+	m        map[string]*list.Element
+	q        *list.List
+	capacity int
+}
+
+func main() {
+	lru := lruSessionCache{}
+
+	lru.Lock()
+	lru.m = make(map[string]*list.Element)
+	lru.Unlock()
+}
+```
+
+In case if external API isn't needed we might prefer unexported field `mu sync.Mutex` withoud embedding.
+```go
+type lruSessionCache struct {
+	mu       sync.Mutex
+	m        map[string]*list.Element
+	q        *list.List
+	capacity int
+}
+```
+
+### Example: `elf.FileHeader`
+
+```go
+// A FileHeader represents an ELF file header.
+type FileHeader struct {
+	Class      Class
+	Data       Data
+	Version    Version
+	OSABI      OSABI
+	ABIVersion uint8
+	ByteOrder  binary.ByteOrder
+	Type       Type
+	Machine    Machine
+	Entry      uint64
+}
+
+// A File represents an open ELF file.
+type File struct {
+	FileHeader
+	Sections  []*Section
+	Progs     []*Prog
+	closer    io.Closer
+	gnuNeed   []verneed
+	gnuVersym []byte
+}
+```
+
+Having embedded struct in a separate struct is a nice example of self-documenting data partitioning
+
+### Example: method promotion
+```go
+type Y struct {
+}
+
+// Promoted method for X
+func (y Y) Bar() {
+	fmt.Println("Y")
+}
+
+type X struct {
+	Y
+}
+
+func (x X) Foo() {
+	fmt.Println("X")
+}
+
+func main() {
+	x := X{}
+	x.Bar() // calls x.Y.Bar()
+}
+```
+```
+Y
+```
+
+## interfaces in interfaces https://eli.thegreenplace.net/2020/embedding-in-go-part-2-interfaces-in-interfaces/
+
+Very simple. In the next example struct must implement `Reader` and `Writer` methods
+
+```go
+// ReadWriter is the interface that groups the basic Read and Write methods.
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+
+the same as
+```go
+type ReadWriter interface {
+    Read(p []byte) (n int, err error)
+	Write(p []byte) (n int, err error)
+}
+
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+this type of embedding eliminates boilerplate code
+
+Prior to go 1.14 you were not allowed to do method overlapping:
+```go
+type A interface {
+    Amethod()
+}
+
+type B interface {
+    A
+    Bmethod()
+}
+
+type C interface {
+    A
+    Cmethod()
+}
+
+type D interface {
+    B
+    C
+    Dmethod()
+}
+```
+
+Now `D` has all the `Amtehod()`, `Bmethod()`, `Cmethod()` and `Dmethod()` which is union of all
+
+## interfaces in structs https://eli.thegreenplace.net/2020/embedding-in-go-part-3-interfaces-in-structs/
+
+```go
+type Fooer interface {
+	Foo()
+}
+
+// Now X implements Fooer
+type X struct {
+	Fooer
+}
+```
+
+We wouldn't be allowed to call `Foo()` if `X` don't implement it
+```go
+type Fooer interface {
+	Foo()
+}
+
+// Now X implements Fooer
+type X struct {
+	Fooer
+}
+
+func main() {
+	x := X{}
+	// same as
+	// x := X{
+	// 	 Fooer: nil,
+	// }
+	Bar(x)
+}
+
+func Bar(fooer Fooer) {
+	fooer.Foo()
+}
+```
+```
+panic: runtime error: invalid memory address or nil pointer dereference
+```
+
+It is essential to give an implementation to interface in order to call it
+```go
+type Fooer interface {
+	Foo()
+}
+
+// Now X implements Fooer
+type X struct {
+	Fooer
+}
+
+type KungFoo struct {
+}
+
+func (k KungFoo) Foo() {
+	fmt.Println("kung foo")
+}
+
+func main() {
+	x := X{
+		Fooer: KungFoo{},
+	}
+	Bar(x)
+}
+
+func Bar(fooer Fooer) {
+	fooer.Foo()
+}
+```
+```
+kung foo
+```
+
+
+
+
+
+
+
+
+
 
 
 # Escape analysis
@@ -1248,7 +1858,6 @@ func main() {
 }
 ```
 ```
-...
 manual/main.go:18:7: X{} escapes to heap
 ```
 
@@ -1322,15 +1931,6 @@ manual/main.go:23:7: Y{} escapes to heap
 ---
 
 TODO:
-1. interface
-  - internals
-  - type assertion
-  - placing: near implementation or in one separate file (probably should move to architecture related part)
-2. for range loop
-3. errors, panics and os.exit
-  - erros.As, errors.Is
-4. address semantics
-5. gc
 6. defer
 7. map
 8. strings
@@ -1350,6 +1950,7 @@ TODO:
 17. rwmutex, mutex
 18. memory layout
   - escape analysis
+  - gc
 19. memory leaks
 20. pprof
 21. benchmarking
