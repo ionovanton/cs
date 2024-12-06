@@ -1,32 +1,9 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
-type Fooer interface {
-	Foo()
-}
-
-// Now X implements Fooer
-type X struct {
-	Fooer
-}
-
-type KungFoo struct {
-}
-
-func (k KungFoo) Foo() {
-	fmt.Println("kung foo")
-}
-
+//go:noinline
 func main() {
-	x := X{
-		Fooer: KungFoo{},
-	}
-	Bar(x)
-}
-
-func Bar(fooer Fooer) {
-	fooer.Foo()
+	x := 42
+	fmt.Println(x)
 }

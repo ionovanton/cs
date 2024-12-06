@@ -1819,24 +1819,401 @@ func Bar(fooer Fooer) {
 kung foo
 ```
 
+### Example: interface wrapper
+ReadCloser has 2 methods, and it might be tedious and unnecessary to implement all of them
+```go
+type StatsConn struct {
+	io.ReadCloser
+
+	BytesRead uint64
+}
+
+func (sc *StatsConn) Read(p []byte) (int, error) {
+	n, err := sc.ReadCloser.Read(p)
+	sc.BytesRead += uint64(n)
+	return n, err
+}
+
+var url = "https://www.kasandbox.org/programming-images/avatars/leaf-red.png"
+
+func main() {
+	response, err := http.Get(url)
+	sconn := &StatsConn{response.Body, 0}
+	defer sconn.Close()
+
+	_, err = io.ReadAll(sconn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(sconn.BytesRead)
+}
+```
+```
+1352
+```
+
+### Example: `context.WithValue`
+Serves as an extender to default functionality of `context.Context`
+```go
+type valueCtx struct {
+	Context
+	key, val any
+}
+```
+
+Initializes as
+```go
+func WithValue(parent Context, key, val any) Context {
+	if parent == nil {
+		panic("cannot create context from nil parent")
+	}
+	if key == nil {
+		panic("nil key")
+	}
+	if !reflectlite.TypeOf(key).Comparable() {
+		panic("key is not comparable")
+	}
+	return &valueCtx{
+		Context: parent, // pass parent is a must as it implements other methods of `Context`
+		key:     key,
+		val:     val,
+	}
+}
+```
+
+This way context.WithValue can avoid reimplementing same methods all over again
 
 
+# Defer statement https://everythingcoding.in/golang-defer/
+## General information
+Used primarly for 
+- resource cleanup
+- unlocking mutexes
+- logging execution time and tracing
+- panic recovery
+- `sync.WaitGroup` update – `defer wg.Done()`
+
+One should be aware of defer side effect. When defering a function call, the arguments of deferred function call are evaluated immediately.
+
+### Example 1
+```go
+func main() {
+	s := "Michael"
+	defer fmt.Println(s)
+	s = "Alice"
+}
+```
+```
+Michael
+```
+
+### Example 2
+```go
+func main() {
+	s := "Michael"
+	defer func(s string) {
+		fmt.Println(s)
+	}(s)
+	s = "Alice"
+}
+```
+```
+Michael
+```
+
+### Example 3
+```go
+func main() {
+	s := "Michael"
+	defer func() { // there is no function arguments to evaluate
+		fmt.Println(s)
+	}()
+	s = "Alice"
+}
+```
+```
+Alice
+```
+
+From https://go.dev/ref/spec#DeferStmt
+> Each time a "defer" statement executes, the function value and parameters to the call are evaluated as usual and saved anew but the actual function is not invoked
+
+## Performance implications
+In Go, using defer statements incur a slight performance impact due to the additional function call and stack management overhead.
 
 
+# Map
+## As of Go 1.23
+### Random access of elements
+When user iterates over map it's purely random because of map implementation
+
+#### range over map
+`mapiterinit` function
+```go
+	...
+	// decide where to start
+	r := uintptr(rand())
+	it.startBucket = r & bucketMask(h.B)
+	it.offset = uint8(r >> h.B & (abi.MapBucketCount - 1))
+
+	// iterator state
+	it.bucket = it.startBucket
+
+	// Remember we have an iterator.
+	// Can run concurrently with another mapiterinit().
+	if old := h.flags; old&(iterator|oldIterator) != iterator|oldIterator {
+		atomic.Or8(&h.flags, iterator|oldIterator)
+	}
+
+	mapiternext(it)
+```
+
+```go
+func main() {
+	m := map[int]int{
+		1:   42,
+		131: 25,
+		27:  6,
+		2:   77,
+	}
+
+	for k, v := range m {
+		fmt.Println(k, v)
+	}
+}
+```
+```go
+go_manual % go run main.go
+1 42
+131 25
+27 6
+2 77
+go_manual % go run main.go
+131 25
+27 6
+2 77
+1 42
+go_manual % go run main.go
+1 42
+131 25
+27 6
+2 77
+```
+
+#### fmt.Print
+On the other hand using `fmt.Print` map is always sorted
+```go
+func main() {
+	m := map[int]int{
+		1:   42,
+		131: 25,
+		27:  6,
+		2:   77,
+	}
+
+	fmt.Printf("%v\n", m)
+}
+```
+```
+map[1:42 2:77 27:6 131:25]
+```
+
+### Can't take the address of element
+User can't take address of map element because of evacuation
+
+### Evacuation
+When all buckets are overloaded (> 6 elements per bucket) evacuation starts.
+Evacuation is incremental and executed per map access. Old map is catched by gc when all elements are evacuated.
+All operations are slowed down because of evacuation.
+That's why it's important to preallocate map once if we know how many elements will be in the map.
+
+# Go's memory layout mental model
+## Sources
+
+https://www.youtube.com/watch?v=wJtgOTmePp0; https://deepu.tech/memory-management-in-golang/;
 
 
-
-
-
+![Go_memory](misc/go_memory.svg)
 
 # Escape analysis
+Go's escape analysis determines whether a variable needs to be heap-allocated, depending on whether the variable's lifetime extends beyond the function's scope.
 
-#### Interface usage and escaping to heap using `go tool compile -m main.go`
+Can be checked via command `go tool compile -m [add up to 4 -m for more verbosity] main.go`
 
-First let's try declaring structs `X` and `Y`. `X` will implement interface `I` whilst Y will not.
+## Basics
+### 1. Function returns pointer https://www.ardanlabs.com/blog/2017/05/language-mechanics-on-escape-analysis.html
+The construction of a value doesn’t determine where it lives. Only how a value is shared will determine what the compiler will do with that value. Anytime you share a value up the call stack, it is going to escape. There are other reasons for a value to escape which you will explore in the next post.
+
+#### Example 1 – pointer return
 ```go
+package main
+
+type user struct {
+	name string
+	age  int
+}
+
+//go:noinline
+func main() {
+	user1 := CreateUserV1()
+	user2 := CreateUserV2()
+
+	println(&user1)
+	println(&user2)
+}
+
+func CreateUserV1() user {
+	steven := user{
+		name: "Steven",
+		age:  45,
+	}
+	return steven
+}
+
+func CreateUserV2() *user {
+	john := user{
+		name: "John",
+		age:  72,
+	}
+	return &john
+}
+```
+```
+go_manual % go tool compile -m main.go
+main.go:28:2: moved to heap: john
+```
+
+#### Example 2.1 – underlying pointer return
+```go
+package main
+
+//go:noinline
+func main() {
+	a := make([]int, 1)
+	Foo(a)
+	b := Bar()
+	_ = a
+	_ = b
+}
+
+//go:noinline
+func Foo(x []int) {
+	x[0] = 1 // does not escape to heap
+}
+
+//go:noinline
+func Bar() []int {
+	y := []int{1} // memory invalidation on function return will cause `y` to escape to heap
+	return y
+}
+```
+```
+main.go:13:10: x does not escape
+main.go:19:12: []int{...} escapes to heap
+main.go:5:11: make([]int, 1) does not escape
+```
+
+
+#### Example 2.2 – underlying pointer return
+
+Number outliving its function causing it to escape to heap
+```go
+package main
+
+type X struct {
+	y Y
+}
+
+type Y struct {
+	z Z
+}
+
+type Z struct {
+	number *int
+}
+
+//go:noinline
+func main() {
+	_ = Foo()
+}
+
+//go:noinline
+func Foo() X {
+	number := 1
+	return X{
+		y: Y{
+			z: Z{
+				number: &number,
+			},
+		},
+	}
+}
+```
+
+#### Example 2.3 – embedding interface in struct
+```go
+package main
+
 type I interface {
-	Foo()
+	Bar()
+}
+
+type X struct {
+	I
+}
+
+type Y struct{}
+
+//go:noinline
+func (y Y) Bar() {
+
+}
+
+//go:noinline
+func main() {
+	_ = Foo()
+}
+
+//go:noinline
+func Foo() X {
+	return X{
+		I: Y{}, // escapes to heap
+	}
+}
+```
+```
+main.go:26:7: Y{} escapes to heap
+```
+
+### 2. Argument passed as interface{}
+#### Example 1
+```go
+package main
+
+import "fmt"
+
+//go:noinline
+func main() {
+	x := 42
+	fmt.Println(x)
+}
+```
+```
+go_manual % go build -gcflags '-m' main.go 
+main.go:8:13: inlining call to fmt.Println
+main.go:8:13: ... argument does not escape
+main.go:8:14: x escapes to heap
+```
+
+#### Example 2
+Method calls on interfaces that refer to stack-allocated variables could lead to invalid memory references, so the Go compiler forces these variables to escape to the heap.
+
+Calling interface method will implicitly pass its reciever to interface hence reciever will be put on heap.
+```go
+package main
+
+type I interface {
+	Foo(string)
 }
 
 type X struct {
@@ -1845,99 +2222,75 @@ type X struct {
 type Y struct {
 }
 
-func (x X) Foo() {}
+//go:noinline
+func (x X) Foo(v string) {
+	println(v)
+}
 
+//go:noinline
+func (y Y) Foo(k string) {
+	println(k)
+}
+
+//go:noinline
 func main() {
 	var x I
 
 	x = X{}
-	x.Foo()
+	// final function signature will be `func Foo(x I, v string)`
+	// same as Foo(x, "some value")
+	x.Foo("some value")
 
 	y := Y{}
-	_ = y
+	// `func Foo(y Y, k string)`
+	// same as Foo(y, "other value")
+	y.Foo("other value")
 }
 ```
 ```
-manual/main.go:18:7: X{} escapes to heap
+main.go:14:16: v does not escape
+main.go:19:16: k does not escape
+main.go:27:7: X{} escapes to heap
 ```
 
-Now `Y` will implement `I` as well but without calling `Foo()`
+
+3. Size of argument exceeds stack memory limit
+
+Every object that is more 64kb does escape to heap as of Go 1.23 on Apple M2
+
+#### Example 1
 ```go
-type I interface {
-	Foo()
-}
-
-type X struct {
-}
-
-type Y struct {
-}
-
-func (x X) Foo() {}
-
-func (y Y) Foo() {}
-
 func main() {
-	var x, y I
-
-	x = X{}
-	x.Foo()
-
-	y = Y{}
-	_ = y
+	a := make([]byte, 0, 65536) // 64 kb sized slice does not escape to heap
+	b := make([]byte, 0, 65537) // escapes to heap
+	_, _ = a, b
 }
 ```
 ```
-manual/main.go:20:7: X{} escapes to heap
-manual/main.go:23:7: Y{} does not escape
+main.go:21:11: make([]byte, 0, 65536) does not escape
+main.go:22:11: make([]byte, 0, 65537) escapes to heap
 ```
 
-1. Go's escape analysis determines whether a variable needs to be heap-allocated, depending on whether the variable's lifetime extends beyond the function's scope.
-2. Method calls on interfaces that refer to stack-allocated variables could lead to invalid memory references, so the Go compiler forces these variables to escape to the heap.
+## How escape analysis is built?
 
-Only when we make `y` call `Foo()` then `y` will escape to heap.
-```go
-type I interface {
-	Foo()
-}
 
-type X struct {
-}
+## When escape analysis is executed?
+Escape analysis executed during compile time
 
-type Y struct {
-}
 
-func (x X) Foo() {}
 
-func (y Y) Foo() {}
-
-func main() {
-	var x, y I
-
-	x = X{}
-	x.Foo()
-
-	y = Y{}
-	y.Foo()
-}
-```
-```
-manual/main.go:20:7: X{} escapes to heap
-manual/main.go:23:7: Y{} escapes to heap
-```
 
 
 
 ---
 
 TODO:
-6. defer
-7. map
 8. strings
 9. closure
 10. marshalling internals
   - custom marshalling
-11. goroutines and scheduler
+11. goroutines, scheduler and concurrency https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html
+  - atomics
   - net poller
   - context switch (including internals)
   - internals
@@ -1949,8 +2302,10 @@ TODO:
 16. sync.Map
 17. rwmutex, mutex
 18. memory layout
+  - sync.Pool
+  - arena package
   - escape analysis
-  - gc
+  - gc https://www.ardanlabs.com/blog/2018/12/garbage-collection-in-go-part1-semantics.html
 19. memory leaks
 20. pprof
 21. benchmarking
@@ -1959,7 +2314,8 @@ TODO:
 24. avito go code guideline
 25. patterns
 26. go mistakes
-27. go assembler
+27. go proverbs https://go-proverbs.github.io/
+28. go assembler
 
 https://github.com/emluque/golang-internals-resources?tab=readme-ov-file
 
