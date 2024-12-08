@@ -2044,7 +2044,7 @@ Can be checked via command `go tool compile -m [add up to 4 -m for more verbosit
 ### 1. Function returns pointer https://www.ardanlabs.com/blog/2017/05/language-mechanics-on-escape-analysis.html
 The construction of a value doesn’t determine where it lives. Only how a value is shared will determine what the compiler will do with that value. Anytime you share a value up the call stack, it is going to escape. There are other reasons for a value to escape which you will explore in the next post.
 
-#### Example 1 – pointer return
+#### Example 1.1 – pointer return
 ```go
 package main
 
@@ -2083,7 +2083,7 @@ go_manual % go tool compile -m main.go
 main.go:28:2: moved to heap: john
 ```
 
-#### Example 2.1 – underlying pointer return
+#### Example 1.2 – underlying pointer return
 ```go
 package main
 
@@ -2114,7 +2114,7 @@ main.go:5:11: make([]int, 1) does not escape
 ```
 
 
-#### Example 2.2 – underlying pointer return
+#### Example 1.3 – underlying pointer return
 
 Number outliving its function causing it to escape to heap
 ```go
@@ -2150,7 +2150,7 @@ func Foo() X {
 }
 ```
 
-#### Example 2.3 – embedding interface in struct
+#### Example 1.4 – embedding interface in struct
 ```go
 package main
 
@@ -2186,7 +2186,7 @@ main.go:26:7: Y{} escapes to heap
 ```
 
 ### 2. Argument passed as interface{}
-#### Example 1
+#### Example 2.1
 ```go
 package main
 
@@ -2205,7 +2205,7 @@ main.go:8:13: ... argument does not escape
 main.go:8:14: x escapes to heap
 ```
 
-#### Example 2
+#### Example 2.2
 Method calls on interfaces that refer to stack-allocated variables could lead to invalid memory references, so the Go compiler forces these variables to escape to the heap.
 
 Calling interface method will implicitly pass its reciever to interface hence reciever will be put on heap.
@@ -2254,15 +2254,15 @@ main.go:27:7: X{} escapes to heap
 ```
 
 
-3. Size of argument exceeds stack memory limit
+### 3. Size of argument exceeds stack memory limit
 
 Every object that is more 64kb does escape to heap as of Go 1.23 on Apple M2
 
-#### Example 1
+#### Example 3.1
 ```go
 func main() {
 	a := make([]byte, 0, 65536) // 64 kb sized slice does not escape to heap
-	b := make([]byte, 0, 65537) // escapes to heap
+	b := make([]byte, 0, 65537) // 64 kb + 1 b escapes to heap
 	_, _ = a, b
 }
 ```
@@ -2271,16 +2271,212 @@ main.go:21:11: make([]byte, 0, 65536) does not escape
 main.go:22:11: make([]byte, 0, 65537) escapes to heap
 ```
 
-## How escape analysis is built?
+### 4. End size is unknown https://www.ardanlabs.com/blog/2017/06/language-mechanics-on-memory-profiling.html
+#### 4.1 io operations
+```go
+//go:noinline
+func main() {
+	r := bufio.NewReader(os.Stdin) // does not escape
+	line, _, _ := r.ReadLine()     // escapes
 
+	s := make([]string, len(line)) // escapes because end size is unknown
+	s[0] = string(line)            // escapes
+	println(s)
+}
+```
+```
+./main.go:10:22: new(bufio.Reader) does not escape
+./main.go:10:22: make([]byte, max(bufio.size, 16)) escapes to heap
+./main.go:13:11: make([]string, len(line)) escapes to heap
+./main.go:14:16: string(line) escapes to heap
+```
 
-## When escape analysis is executed?
+```go
+//go:noinline
+func main() {
+	r := bufio.NewReader(os.Stdin) // does not escape
+	line, _, _ := r.ReadLine()     // escapes
+
+	s := make([]string, 16) // does not escape since size is known
+	s[0] = string(line)     // escapes
+	println(s)
+}
+```
+```
+./main.go:10:22: new(bufio.Reader) does not escape
+./main.go:10:22: make([]byte, max(bufio.size, 16)) escapes to heap
+./main.go:13:11: make([]string, 16) does not escape
+./main.go:14:16: string(line) escapes to heap
+```
+
+### When escape analysis is executed?
 Escape analysis executed during compile time
 
+### Some takeaways regarding compiler optimizations, taken from William Kennedy
+> That being said, never write code with performance as your first priority because you don’t want to be guessing about performance. Write code that optimizes for correctness as your first priority. This means focus on integrity, readability and simplicity first. Once you have a working program, identify if the program is fast enough. If it’s not fast enough, then use the tooling the language provides to find and fix your performance issues.
+
+### Final words
+A “less is more” attitude is critical to solving problems with fewer layers, statements, generalizations, less complexity and less effort. This makes everything easier on you and your teams, but it also makes it easier for the hardware to execute these data transformations.
+
+## Semantic Guidelines https://www.ardanlabs.com/blog/2017/06/design-philosophy-on-data-and-semantics.html
+Here are the basic guidelines:
+
+- At the time you declare a type you must decide what semantic is being used.
+- Functions and methods must respect the semantic choice for the given type.
+- Avoid having method receivers that use different semantics than those corresponding to a given type.
+- Avoid having functions that accept/return data using different semantics than those corresponding to the given type.
+- Avoid changing the semantic for a given type.
+
+#### Semantic 1: Built in types. Numeric, textual and boolean data.
+These types should be handled using value semantics. Don’t use pointers to share values of these types unless you have a very good reason.
+
+Example of value semantics on built in types
+```go
+func Replace(s, old, new string, n int) string
+func LastIndex(s, sep string) int
+func ContainsRune(s string, r rune) bool
+```
+
+#### Semantic 2: Reference types. Slice, map, interface, function and channel.
+These types should be using value semantics because they have been designed to stay on the stack and minimize heap pressure. Don’t use pointers to share values of these types unless you have a very good reason.
+
+#### Semantic 3: User defined types.
+Most of the time your ability to use value semantics is limiting. It isn’t correct or reasonable to make copies of the data as it passes from function to function. Changes to the data need to be isolated to a single value and shared. This is when pointer semantics need to be used. If you are not 100% sure it is correct or reasonable to make copies, then use pointer semantics.
+
+Always respect the semantic of the given type.
+##### Example 1: Value semantic
+Here we get copy of `Time`
+```go
+func Now() Time {
+  	sec, nsec := now()
+  	return Time{sec + unixToInternal, nsec, Local}
+}
+```
+
+Further operations on `Time` respect its value semantic. Hence operations should mutate original value of `Time`.
+```go
+func (t Time) Add(d Duration) Time { // value reciever, then return copy means mutation of `Time`
+  	t.sec += int64(d / 1e9)
+  	nsec := t.nsec + int32(d%1e9)
+  	if nsec >= 1e9 {
+  		t.sec++
+  		nsec -= 1e9
+  	} else if nsec < 0 {
+  		t.sec--
+  		nsec += 1e9
+  	}
+  	t.nsec = nsec
+  	return t
+}
+```
+
+##### Example 2: Pointer semantic
+```go
+func Open(name string) (file *File, err error) {
+    return OpenFile(name, O_RDONLY, 0)
+}
+```
+
+The `Open` function is returning a pointer of type `File`. This means you should be using pointer semantics and always share `File` values. Changing the semantic from pointer to value could be devastating to your program. When a function shares a value with you, you should assume that **you are not allowed to make a copy of the value** pointed to by the pointer. If you do, results will be undefined.
+
+Looking at more of the API you will see the consistent use of pointer semantics.
+
+```go
+// consistent about pointer semantics
+func (f *File) Chdir() error {
+    if f == nil {
+        return ErrInvalid
+    }
+    if e := syscall.Fchdir(f.fd); e != nil {
+        return &PathError{"chdir", f.name, e}
+    }
+    return nil
+}
+```
+
+## Conclusion
+> The consistent use of value/pointer semantics is something I look for in code reviews. It helps you keep code consistent and predictable over time. It also allows everyone to maintain a clear and consistent mental model of the code. As the code base and the team gets larger, consistent use of value/pointer semantics becomes even more important.
 
 
+## Garbace collector https://www.youtube.com/watch?v=ZZJBu2o-NBU
+
+### Concept
+Mark and sweep 3-colored algorithm is the basis of Go's GC. GC is concurrent and can be invoked during main program run.
+
+### Algorithm
+0. State before GC start. All elements are white.
 
 
+![alt text](misc/gc0.svg)
+
+1. Traverse all root nodes and mark them as gray. Continue until all roots are marked.
+
+![alt text](misc/gc1.svg)
+
+2. Traverse until gray node queue is empty. Check whether gray node has any pointers to it. If gray node has pointer it becomes black. If not it left white.
+
+![alt text](misc/gc2.svg)
+
+![alt text](misc/gc21.svg)
+
+![alt text](misc/gc22.svg)
+
+3. Remove all white nodes as no one refers to them
+
+![alt text](misc/gc3.svg)
+
+### Mutator and write barrier
+Main program which executes concurrently with GC called *mutator*. Mutator changes state of the heap and responsible for: object creation, pointer movement, etc. Such actions could invalidate consistency algorithm of GC. Should you run GC with mutator concurrently, heap will be left with black objects pointing to white objects. *Write barrier* comes into place as it forbids mutator to invalidate heap consistency during GC mark phase.
+
+Write barrier activated or disabled obly at the moment of stop the world (STW) phase of GC.
+
+### Pacer
+
+*Pacer* decides when to run GC. Pacer enables GC on heap doubling in size. Coefficient could be changed via `GOGC` global variable.
+
+### GC full cycle
+1. Sweep termination
+
+- Change GC state to `_GCoff`.
+- Assume last GC cycle is not over.
+- Wait until all goroutines are at safe point.
+
+2. Mark phase
+
+	About 25% of CPU is allocated for goroutine that run mark phase
+
+- Enable write barrier.
+- Run main programm – Start the world.
+- Scan global variables and goroutines stacks. Goroutine is paused if its stack is being scanned.
+- Run tricolor algorithm.
+
+3. Mark terminaion
+
+- Change GC state to `_GCmarktermination`.
+- Stop the world.
+- Wait for all jobs are done in queue.
+- Clean goroutines caches.
+
+4. Sweep phase
+
+- Disable write barrier.
+- Start the world.
+- Release all resources which were allocated for GC
+
+### Optimizations
+
+GC could become bottleneck when it comes to performance of a program. Some recommendations for better performance:
+
+- Reduce GC calls via `GOGC` global variable.
+- Use `sync.Pool`.
+- Avoid allocationg heap objects.
+
+
+## Memory leaks https://habr.com/ru/companies/ncloudtech/articles/675390/
+
+## `sync.Pool`
+
+## `arena` package
 
 ---
 
@@ -2295,16 +2491,16 @@ TODO:
   - context switch (including internals)
   - internals
   - GOMAXPROCS
-12. channels
-13. race condition and data race
+  - race condition and data race
+  - rwmutex, mutex
+  - select
+  - sync.Map
+  - channels
 14. context
-15. select
-16. sync.Map
-17. rwmutex, mutex
 18. memory layout
+  - memory leaks
   - sync.Pool
   - arena package
-  - escape analysis
   - gc https://www.ardanlabs.com/blog/2018/12/garbage-collection-in-go-part1-semantics.html
 19. memory leaks
 20. pprof
@@ -2318,13 +2514,3 @@ TODO:
 28. go assembler
 
 https://github.com/emluque/golang-internals-resources?tab=readme-ov-file
-
-
-
----
-```go
-
-```
-```
-
-```
