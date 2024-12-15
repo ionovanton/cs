@@ -1,4 +1,4 @@
-## cs &nbsp;&nbsp;![cs](https://progressbar-guibranco.vercel.app/2/?title=114/5294)
+## cs &nbsp;&nbsp;![cs](https://progressbar-guibranco.vercel.app/2/?title=126/5295)
 ### distributed-systems
 ![distributed-systems](https://progressbar-guibranco.vercel.app/0/?title=0/1)
 ### databases
@@ -10,19 +10,17 @@
 ### version-control
 ![version-control](https://progressbar-guibranco.vercel.app/0/?title=0/4)
 ### language
-![language](https://progressbar-guibranco.vercel.app/10/?title=3/28)
+![language](https://progressbar-guibranco.vercel.app/50/?title=15/30)
 ### computer-architecture
 ![computer-architecture](https://progressbar-guibranco.vercel.app/0/?title=0/430)
 ### math
 ![math](https://progressbar-guibranco.vercel.app/3/?title=70/1931)
-### formal-language-math
-![formal-language-math](https://progressbar-guibranco.vercel.app/0/?title=0/2)
 ### programming
 ![programming](https://progressbar-guibranco.vercel.app/0/?title=0/356)
 ### profiling
 ![profiling](https://progressbar-guibranco.vercel.app/0/?title=0/2)
 ### linux
-![linux](https://progressbar-guibranco.vercel.app/0/?title=0/4)
+![linux](https://progressbar-guibranco.vercel.app/0/?title=0/5)
 ### compilers
 ![compilers](https://progressbar-guibranco.vercel.app/2/?title=10/380)
 ### operating-systems

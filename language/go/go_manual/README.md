@@ -1,5 +1,5 @@
 ## Progress
-### 1 / 27
+### 14 / 27
 
 # Slice
 ## https://go.dev/blog/slices
@@ -230,8 +230,15 @@ func main() {
 ```
 
 # Interface
-### Interface internals https://golang.design/go-questions/interface/iface-eface/
-#### `iface` vs `eface`
+## Interface internals https://golang.design/go-questions/interface/iface-eface/
+### `iface` vs `eface`
+
+DI чтобы
+- все зависимости перечислены
+
+dependency inversion
+хендлер может зависить от репо, а наоборот – нет
+
 
 `iface` и `eface` are basic structures which describe interfaces in Golang. `iface` includes methods and `eface` describes empty interface which does not include any methods.
 
@@ -245,6 +252,13 @@ type itab struct { // 40 bytes on a 64bit arch
     fun   [1]uintptr     // multiple method addresses are stored here; use pointer arithmetics to iterate
 }
 ```
+
+<!-- func FindDigits(filename string) []byte {
+    b, _ := ioutil.ReadFile(filename)
+    dst := digitRegexp(b)
+    result := copy(dst, source)
+    return dst
+} -->
 
 ```go
 type interfaceType = abi.InterfaceType
@@ -316,7 +330,7 @@ type SliceType struct {
 }
 ```
 
-#### Comparing interface and `nil`
+### Comparing interface and `nil`
 From previous section we found out that interface consists of `tab` holding type related information and `data` holding data of implemented struct
 
 Interface considered `nil` if and only if `tab` **and** `data` are both `nil`
@@ -467,7 +481,7 @@ func main() {
 {i:42 s:some random text}
 ```
 
-#### Compiler determines whether struct implements interface
+### Compiler determines whether struct implements interface
 In some libraries you might have seen the following kind of statement
 ```go
 var _ io.Writer = (*myWriter)(nil)
@@ -499,7 +513,7 @@ main.go:5:15: cannot use Strct{} (value of type Strct) as Inter value in variabl
 ```
 When compiler performs type checking phase it reports unimplemented interface
 
-#### How interface is being built https://studygolang.com/articles/28873
+### How interface is being built https://studygolang.com/articles/28873
 Let's take a look at the following code
 ```go
 package main
@@ -626,7 +640,7 @@ type itab struct {
 }
 ```
 
-#### Polymorphism and how much it costs
+### Polymorphism and how much it costs
 ```go
 package main
 
@@ -912,6 +926,13 @@ type Strct1 struct {
 	StrctValue int
 }
 
+встраивание реализовывает "имеет"
+насладование "является"
+
+наследование в SOLID передача в функцию объект какого-то, то можно передать наследника этого типа, в го нельзя так сделать принцип Лисков не соблюдается
+встраиваемый объект ничего не знает про то, куда он встроен
+встраивание от наследования отличается по нескольким принципами
+
 func (s Strct1) Foo(p *pair) int {
 	return s.StrctValue + p.first + p.second
 }
@@ -979,7 +1000,7 @@ ok      go_manual/bench 2.053s
 
 Almost 5 times faster now and no heap allocations this time. Perhaps compiler optimizes a call somehow.
 
-#### Why do `T` and `*T` have different method sets? https://gronskiy.com/posts/2020-04-golang-pointer-vs-value-methods/
+### Why do `T` and `*T` have different method sets? https://gronskiy.com/posts/2020-04-golang-pointer-vs-value-methods/
 ```go
 type T struct {
 }
@@ -2027,15 +2048,14 @@ Evacuation is incremental and executed per map access. Old map is catched by gc 
 All operations are slowed down because of evacuation.
 That's why it's important to preallocate map once if we know how many elements will be in the map.
 
-# Go's memory layout mental model
-## Sources
+# Memory
+## Memory mental layout
 
 https://www.youtube.com/watch?v=wJtgOTmePp0; https://deepu.tech/memory-management-in-golang/;
 
-
 ![Go_memory](misc/go_memory.svg)
 
-# Escape analysis
+## Escape analysis
 Go's escape analysis determines whether a variable needs to be heap-allocated, depending on whether the variable's lifetime extends beyond the function's scope.
 
 Can be checked via command `go tool compile -m [add up to 4 -m for more verbosity] main.go`
@@ -2398,7 +2418,7 @@ func (f *File) Chdir() error {
 > The consistent use of value/pointer semantics is something I look for in code reviews. It helps you keep code consistent and predictable over time. It also allows everyone to maintain a clear and consistent mental model of the code. As the code base and the team gets larger, consistent use of value/pointer semantics becomes even more important.
 
 
-## Garbace collector https://www.youtube.com/watch?v=ZZJBu2o-NBU
+## Garbage collector https://www.youtube.com/watch?v=ZZJBu2o-NBU
 
 ### Concept
 Mark and sweep 3-colored algorithm is the basis of Go's GC. GC is concurrent and can be invoked during main program run.
@@ -2472,13 +2492,296 @@ GC could become bottleneck when it comes to performance of a program. Some recom
 - Avoid allocationg heap objects.
 
 
-## Memory leaks https://habr.com/ru/companies/ncloudtech/articles/675390/
+## Memory leaks https://dev.to/gkampitakis/memory-leaks-in-go-3pcn#common-causes-for-memory-leaks-in-go
+### https://dave.cheney.net/2016/12/22/never-start-a-goroutine-without-knowing-how-it-will-stop
 
-## `sync.Pool`
+```go
+ch := somefunction() // we don't know whether channel will be closed, hence potential goroutine leak
+go func() {
+    for range ch { } // stops when channel is closed
+}()
+```
 
-## `arena` package
+### Goroutine leaks https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html
+Goroutine stacks allocates on process heap, hence infinite Goroutine recursion leads not to stack overflow but to OOM (out of memory) error.
+One of common mistakes when programmer forgets to cancel Goroutines context on gRPC call.
+**The important connotation is that any goroutine leak means its resources would not be released.**
+
+A common type of memory leak is leaking Goroutines. If you start a Goroutine that you expect to eventually terminate but it never does then it has leaked. It lives for the lifetime of the application and any memory allocated for the Goroutine can’t be released. This is part of the reasoning behind the advice “Never start a goroutine without knowing how it will stop”.
+
+Another example
+```go
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int)
+
+	// Leak: The Forgotten Sender
+	go func() {
+		val := <-ch
+		fmt.Println(val)
+	}()
+}
+```
+
+Check for leaks via go.uber.org/goleak
+```go
+package main
+
+import (
+	"testing"
+
+	"go.uber.org/goleak"
+)
+
+func TestA(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	main()
+}
+```
+
+Test found goroutine after termination of main. Meaning goroutine leak.
+```
+=== RUN   TestA
+    /Users/ayionov/Desktop/cs/language/go/go_manual/main_test.go:13: found unexpected goroutines:
+        [Goroutine 20 in state chan receive, with go_manual.main.func1 on top of the stack:
+        go_manual.main.func1()
+                /Users/ayionov/Desktop/cs/language/go/go_manual/main.go:10 +0x28
+        created by go_manual.main in goroutine 19
+                /Users/ayionov/Desktop/cs/language/go/go_manual/main.go:9 +0x6c
+        ]
+--- FAIL: TestA (0.44s)
+FAIL
+FAIL    go_manual       0.771s
+```
+
+Let's fix the program
+```go
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int)
+
+	go func() {
+		val := <-ch
+		fmt.Println(val)
+	}()
+
+	close(ch) // leak fix
+}
+```
+
+And run test again
+```
+=== RUN   TestMain
+=== RUN   TestMain/leak
+0
+--- PASS: TestMain/leak (0.00s)
+--- PASS: TestMain (0.00s)
+PASS
+```
+
+Every time you write the statement go in a program, you should consider the question of how, and under what conditions, the goroutine you are about to start, will end.
+### Unbounded resource creation
+```go
+var cache = map[int]int{}
+
+func main() {
+  // keep allocating memory indifinitely
+  for i:=0; ; i++ {
+    cache[i] = i
+  }
+}
+```
+
+Introduce TTL for cache
+```go
+var cache = map[int]int{}
+
+func main() {
+  for i:=0; ; i++ {
+    // max items cache can hold is 1_000_000
+    if len(cache) >= 1_000_000 {
+      delete(cache, i-len(cache))
+    }
+    
+    cache[i] = i
+  }
+}
+```
+This applies to many resources, like Goroutines, connections, file descriptors etc.
+
+### Long lived references
+Some of the cases are global variables, never ending goroutines, maps or not resetting pointers.
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func leakyReadFromFile() ([]byte, error) {
+	data, err := os.ReadFile("README.md")
+	if err != nil {
+		return nil, err
+	}
+	return data[10:11], nil
+}
+
+func main() {
+	data, _ := leakyReadFromFile()
+	fmt.Println(data)
+}
+```
+
+The correct way, would be to call `bytes.Clone(data[10:11])` so that the data will no longer be referenced and subsequently collected by gargage collector.
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func readFromFile() ([]byte, error) {
+	data, err := os.ReadFile("README.md")
+	if err != nil {
+		return nil, err
+	}
+	return bytes.Clone(data[10:11]), nil
+}
+
+func main() {
+	data, _ := leakyReadFromFile()
+	fmt.Println(data)
+}
+```
+
+### Deferred code in loop
+
+The problem with the code below is that if we call `processManyFiles` with a lot of files we are goint to close all the files after we are done processing.
+```go
+func processManyFiles(files []string) error {
+  for _, file := range files {
+    f, err := os.Open(file)
+    if err != nil {
+      return err 
+    }
+    defer f.Close()
+    
+    process(f)
+  }
+  
+  return nil
+}
+
+func process(f *os.File) {
+  // do something with the file
+}
+```
+
+The solution would be decoupling many calls and deffered calls. In the example below for each file deffered call is immidiate.
+```go
+func processManyFiles(files []string) error {
+  for _, file := range files {
+    err := process(file)
+    if err != nil {
+      return err 
+    }
+  }
+  
+  return nil
+}
+
+func process(name string) error {
+  f, err := os.Open(name)
+  if err != nil {
+    return err
+  }
+  defer f.Close() // Problem fixed. One file opening and one guaranteed deferred call.
+  
+  // do something with the file
+  
+  return nil
+}
+```	
+
+## `sync.Pool` https://habr.com/ru/articles/277137/
+Problem that `sync.Pool` solves.
+Imagine you allocate some `[]byte` slice. You work with it and release. After some period of time GC will claim it back.
+While GC claiming it back you need one more `[]byte` slice. So you left with new memory while you could reuse the old one.
+With `sync.Pool` you could be reusing the old memory, not worrying about GC claiming it back.
+
+What you need to do?
+
+1. Create pool
+```go
+func main() {
+	var pool = sync.Pool{
+		New: func() any {
+			return []byte{}
+		},
+	}
+}
+```
+
+2. Reset state of memory block
+
+```go
+// assume we have `ary`
+ary = ary[:0] // cut length, save capacity
+```
+
+3. Store memory blocks in pool
+
+```go
+const maxCap = 1024
+if cap(ary) <= maxCap {
+	pool.Put(ary)
+}
+```
+
+4. Claim new memory blocks from pool
+
+```go
+nextAry := pool.Get().([]byte)
+```
+
+Much simpler use is via two functions below
+```go
+// claim
+func getBytes() (b []byte) {
+    ifc := bytesPool.Get()
+    if ifc != nil {
+        b = ifc.([]byte)
+    }
+    return
+}
+// release
+func putBytes(b []byte) {
+    if cap(b) <= maxCap {
+        b = b[:0] // сброс
+        bytesPool.Put(b)
+    }
+}
+```
+
+Some things to keep in mind
+- Pool is thread safe
+- You cannot set custom size of a pool
+- No worrying about pool overflow
+- Pool with limited size may be created with buffered channel
 
 ---
+
+
+
 
 TODO:
 8. strings
@@ -2487,7 +2790,9 @@ TODO:
   - custom marshalling
 11. goroutines, scheduler and concurrency https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html
   - atomics
+  - context
   - net poller
+  - unix threads
   - context switch (including internals)
   - internals
   - GOMAXPROCS
@@ -2496,13 +2801,7 @@ TODO:
   - select
   - sync.Map
   - channels
-14. context
-18. memory layout
-  - memory leaks
-  - sync.Pool
-  - arena package
-  - gc https://www.ardanlabs.com/blog/2018/12/garbage-collection-in-go-part1-semantics.html
-19. memory leaks
+  - system calls + io system calls
 20. pprof
 21. benchmarking
 22. effective go
