@@ -1,8 +1,146 @@
 ## Progress
 ### 14 / 27
 
+# Table of contents
+- [Table of contents](#table-of-contents)
+- [Slice](#slice)
+	- [Slices https://go.dev/blog/slices](#slices-httpsgodevblogslices)
+	- [Slice tricks https://go.dev/wiki/SliceTricks](#slice-tricks-httpsgodevwikislicetricks)
+- [Interface](#interface)
+	- [Interface internals https://golang.design/go-questions/interface/iface-eface/](#interface-internals-httpsgolangdesigngo-questionsinterfaceiface-eface)
+		- [`iface` vs `eface`](#iface-vs-eface)
+			- [`Type` structure](#type-structure)
+		- [Comparing interface and `nil`](#comparing-interface-and-nil)
+		- [Compiler determines whether struct implements interface](#compiler-determines-whether-struct-implements-interface)
+		- [How interface is being built https://studygolang.com/articles/28873](#how-interface-is-being-built-httpsstudygolangcomarticles28873)
+		- [Polymorphism and how much it costs](#polymorphism-and-how-much-it-costs)
+		- [Why do `T` and `*T` have different method sets? https://gronskiy.com/posts/2020-04-golang-pointer-vs-value-methods/](#why-do-t-and-t-have-different-method-sets-httpsgronskiycomposts2020-04-golang-pointer-vs-value-methods)
+				- [How methods can be called on various receivers](#how-methods-can-be-called-on-various-receivers)
+				- [Interfaces](#interfaces)
+				- [Why such implementation?](#why-such-implementation)
+- [Golang address operator](#golang-address-operator)
+- [Regular `for range` loop](#regular-for-range-loop)
+		- [What is output of this program and why?](#what-is-output-of-this-program-and-why)
+- [`error`, `panic` and `os.Exit()`](#error-panic-and-osexit)
+	- [`panic` – either unexpected error that one could recover from or programmer error https://eli.thegreenplace.net/2018/on-the-uses-and-misuses-of-panics-in-go/](#panic--either-unexpected-error-that-one-could-recover-from-or-programmer-error-httpselithegreenplacenet2018on-the-uses-and-misuses-of-panics-in-go)
+		- [unexpected error](#unexpected-error)
+		- [programmer error](#programmer-error)
+	- [os.Exit() – immediate exit](#osexit--immediate-exit)
+	- [`error` – error that should be handled](#error--error-that-should-be-handled)
+- [Embedding in Go](#embedding-in-go)
+	- [structs in structs https://eli.thegreenplace.net/2020/embedding-in-go-part-1-structs-in-structs/](#structs-in-structs-httpselithegreenplacenet2020embedding-in-go-part-1-structs-in-structs)
+		- [Example: `sync.Mutex`](#example-syncmutex)
+		- [Example: `elf.FileHeader`](#example-elffileheader)
+		- [Example: method promotion](#example-method-promotion)
+	- [interfaces in interfaces https://eli.thegreenplace.net/2020/embedding-in-go-part-2-interfaces-in-interfaces/](#interfaces-in-interfaces-httpselithegreenplacenet2020embedding-in-go-part-2-interfaces-in-interfaces)
+	- [interfaces in structs https://eli.thegreenplace.net/2020/embedding-in-go-part-3-interfaces-in-structs/](#interfaces-in-structs-httpselithegreenplacenet2020embedding-in-go-part-3-interfaces-in-structs)
+		- [Example: interface wrapper](#example-interface-wrapper)
+		- [Example: `context.WithValue`](#example-contextwithvalue)
+- [Defer statement https://everythingcoding.in/golang-defer/](#defer-statement-httpseverythingcodingingolang-defer)
+	- [General information](#general-information)
+		- [Example 1](#example-1)
+		- [Example 2](#example-2)
+		- [Example 3](#example-3)
+	- [Performance implications](#performance-implications)
+- [Map](#map)
+	- [As of Go 1.23](#as-of-go-123)
+		- [Random access of elements](#random-access-of-elements)
+			- [range over map](#range-over-map)
+			- [fmt.Print](#fmtprint)
+		- [Can't take the address of element](#cant-take-the-address-of-element)
+		- [Evacuation](#evacuation)
+- [Memory](#memory)
+	- [Memory mental layout](#memory-mental-layout)
+- [Escape analysis](#escape-analysis)
+	- [Basics](#basics)
+		- [1. Function returns pointer https://www.ardanlabs.com/blog/2017/05/language-mechanics-on-escape-analysis.html](#1-function-returns-pointer-httpswwwardanlabscomblog201705language-mechanics-on-escape-analysishtml)
+			- [Example 1.1 – pointer return](#example-11--pointer-return)
+			- [Example 1.2 – underlying pointer return](#example-12--underlying-pointer-return)
+			- [Example 1.3 – underlying pointer return](#example-13--underlying-pointer-return)
+			- [Example 1.4 – embedding interface in struct](#example-14--embedding-interface-in-struct)
+		- [2. Argument passed as interface{}](#2-argument-passed-as-interface)
+			- [Example 2.1](#example-21)
+			- [Example 2.2](#example-22)
+		- [3. Size of argument exceeds stack memory limit](#3-size-of-argument-exceeds-stack-memory-limit)
+			- [Example 3.1](#example-31)
+		- [4. End size is unknown https://www.ardanlabs.com/blog/2017/06/language-mechanics-on-memory-profiling.html](#4-end-size-is-unknown-httpswwwardanlabscomblog201706language-mechanics-on-memory-profilinghtml)
+			- [4.1 io operations](#41-io-operations)
+		- [When escape analysis is executed?](#when-escape-analysis-is-executed)
+		- [Some takeaways regarding compiler optimizations, taken from William Kennedy](#some-takeaways-regarding-compiler-optimizations-taken-from-william-kennedy)
+		- [Final words](#final-words)
+	- [Semantic Guidelines https://www.ardanlabs.com/blog/2017/06/design-philosophy-on-data-and-semantics.html](#semantic-guidelines-httpswwwardanlabscomblog201706design-philosophy-on-data-and-semanticshtml)
+			- [Semantic 1: Built in types. Numeric, textual and boolean data.](#semantic-1-built-in-types-numeric-textual-and-boolean-data)
+			- [Semantic 2: Reference types. Slice, map, interface, function and channel.](#semantic-2-reference-types-slice-map-interface-function-and-channel)
+			- [Semantic 3: User defined types.](#semantic-3-user-defined-types)
+				- [Example 1: Value semantic](#example-1-value-semantic)
+				- [Example 2: Pointer semantic](#example-2-pointer-semantic)
+	- [Conclusion](#conclusion)
+- [Garbage collector https://www.youtube.com/watch?v=ZZJBu2o-NBU](#garbage-collector-httpswwwyoutubecomwatchvzzjbu2o-nbu)
+	- [Concept](#concept)
+	- [Algorithm](#algorithm)
+	- [Mutator and write barrier](#mutator-and-write-barrier)
+	- [Pacer](#pacer)
+	- [GC full cycle](#gc-full-cycle)
+	- [Rule of thumbs](#rule-of-thumbs)
+	- [Optimizations](#optimizations)
+- [Memory leaks https://dev.to/gkampitakis/memory-leaks-in-go-3pcn#common-causes-for-memory-leaks-in-go](#memory-leaks-httpsdevtogkampitakismemory-leaks-in-go-3pcncommon-causes-for-memory-leaks-in-go)
+	- [https://dave.cheney.net/2016/12/22/never-start-a-goroutine-without-knowing-how-it-will-stop](#httpsdavecheneynet20161222never-start-a-goroutine-without-knowing-how-it-will-stop)
+	- [Goroutine leaks https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html](#goroutine-leaks-httpswwwardanlabscomblog201811goroutine-leaks-the-forgotten-senderhtml)
+	- [Unbounded resource creation](#unbounded-resource-creation)
+		- [Long lived references](#long-lived-references)
+		- [Deferred code in loop](#deferred-code-in-loop)
+- [Go Scheduler](#go-scheduler)
+	- [Part I; OS Scheduler https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html](#part-i-os-scheduler-httpswwwardanlabscomblog201808scheduling-in-go-part1html)
+		- [Thread States](#thread-states)
+			- [Waiting](#waiting)
+			- [Runnable](#runnable)
+			- [Executing](#executing)
+	- [Types of work](#types-of-work)
+		- [CPU-Bound](#cpu-bound)
+		- [IO-Bound](#io-bound)
+	- [Context switch](#context-switch)
+		- [IO-Bound work oriented program](#io-bound-work-oriented-program)
+		- [CPU-Bound work oriented program](#cpu-bound-work-oriented-program)
+	- [Part II; Go Scheduler https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html](#part-ii-go-scheduler-httpswwwardanlabscomblog201808scheduling-in-go-part2html)
+		- [Intruduction](#intruduction)
+		- [Cooperating Scheduler](#cooperating-scheduler)
+		- [Goroutine States](#goroutine-states)
+		- [Context switching](#context-switching)
+		- [Asynchronous System Calls](#asynchronous-system-calls)
+		- [Synchronous System Calls](#synchronous-system-calls)
+		- [Work stealing algorithm](#work-stealing-algorithm)
+		- [Practical example](#practical-example)
+			- [C program](#c-program)
+			- [Go program](#go-program)
+	- [Part III; Concurrency https://www.ardanlabs.com/blog/2018/12/scheduling-in-go-part3.html](#part-iii-concurrency-httpswwwardanlabscomblog201812scheduling-in-go-part3html)
+		- [Workloads](#workloads)
+			- [CPU-Bound](#cpu-bound-1)
+			- [IO-Bound](#io-bound-1)
+			- [Conclusion](#conclusion-1)
+		- [Test cases](#test-cases)
+			- [Adding numbers](#adding-numbers)
+			- [Sorting](#sorting)
+			- [Reading files](#reading-files)
+- [Goroutine leak](#goroutine-leak)
+	- [What is goroutine leak?](#what-is-goroutine-leak)
+	- [Monitoring with runtime](#monitoring-with-runtime)
+	- [Profiling with `pprof`](#profiling-with-pprof)
+	- [Leaging scenarios](#leaging-scenarios)
+		- [Scenario 1: Blocked on channel](#scenario-1-blocked-on-channel)
+			- [Problem](#problem)
+			- [Solution](#solution)
+		- [Scenario 2: Forgotten Goroutine](#scenario-2-forgotten-goroutine)
+			- [Problem](#problem-1)
+		- [Scenario 3: Leaking in a loop](#scenario-3-leaking-in-a-loop)
+			- [Problem](#problem-2)
+			- [Solution](#solution-1)
+		- [Key takeaways](#key-takeaways)
+- [Goroutine leak detector https://habr.com/ru/companies/otus/articles/554624/](#goroutine-leak-detector-httpshabrcomrucompaniesotusarticles554624)
+
+
+
 # Slice
-## https://go.dev/blog/slices
+## Slices https://go.dev/blog/slices
 A slice is a data structure describing a contiguous section of an array stored separately from the slice variable itself. A slice is not an array. A slice describes a piece of an array.
 
 ```go
@@ -233,13 +371,6 @@ func main() {
 ## Interface internals https://golang.design/go-questions/interface/iface-eface/
 ### `iface` vs `eface`
 
-DI чтобы
-- все зависимости перечислены
-
-dependency inversion
-хендлер может зависить от репо, а наоборот – нет
-
-
 `iface` и `eface` are basic structures which describe interfaces in Golang. `iface` includes methods and `eface` describes empty interface which does not include any methods.
 
 `iface` includes two pointers: `tab` pointing to `itab` structure which describes interface type and data pointing to concrete value of interface (usually stored on heap).
@@ -378,6 +509,13 @@ false
 
 Another example regarding comparing interface and `nil`
 ```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
 type MyError struct{}
 
 func (i MyError) Error() string {
@@ -385,18 +523,17 @@ func (i MyError) Error() string {
 }
 
 func main() {
-	err1 := Process1()
+	var err1 error = Process1()
 	fmt.Printf("err1: type is %v; value is %+v\n", reflect.TypeOf(err1), err1)
-	println(err1 == nil) // false because err1 is interface and its tab is pointer to struct
+	println(err1 == nil) // true because both type and data of err1 is nil
 
-	err2 := Process2()
+	var err2 error = Process2()
 	fmt.Printf("err2: type is %v; value is %+v\n", reflect.TypeOf(err2), err2)
-	println(err2 == nil) // true because err2 is pointer to struct which is nil
+	println(err2 == nil) // false type of err2 is not nil
 }
 
 func Process1() error {
-	var err *MyError = nil
-	return err
+	return nil
 }
 
 func Process2() *MyError {
@@ -1394,9 +1531,9 @@ exit status 2
 ```
 
 ## os.Exit() – immediate exit
-`Exit` causes the current programm to exit with the given status code. The program terminates immediately. Deferred functions are not run.
+`Exit` causes the current program to exit with the given status code. The program terminates immediately. Deferred functions are not run.
 
-There are some reasons why one would terminate programm immediately
+There are some reasons why one would terminate program immediately
 - Program has done everything it needed to do, and now just needs to exit
 - Some other reasons? I don't know.
 
@@ -2055,7 +2192,7 @@ https://www.youtube.com/watch?v=wJtgOTmePp0; https://deepu.tech/memory-managemen
 
 ![Go_memory](misc/go_memory.svg)
 
-## Escape analysis
+# Escape analysis
 Go's escape analysis determines whether a variable needs to be heap-allocated, depending on whether the variable's lifetime extends beyond the function's scope.
 
 Can be checked via command `go tool compile -m [add up to 4 -m for more verbosity] main.go`
@@ -2418,12 +2555,12 @@ func (f *File) Chdir() error {
 > The consistent use of value/pointer semantics is something I look for in code reviews. It helps you keep code consistent and predictable over time. It also allows everyone to maintain a clear and consistent mental model of the code. As the code base and the team gets larger, consistent use of value/pointer semantics becomes even more important.
 
 
-## Garbage collector https://www.youtube.com/watch?v=ZZJBu2o-NBU
+# Garbage collector https://www.youtube.com/watch?v=ZZJBu2o-NBU
 
-### Concept
+## Concept
 Mark and sweep 3-colored algorithm is the basis of Go's GC. GC is concurrent and can be invoked during main program run.
 
-### Algorithm
+## Algorithm
 0. State before GC start. All elements are white.
 
 
@@ -2445,16 +2582,16 @@ Mark and sweep 3-colored algorithm is the basis of Go's GC. GC is concurrent and
 
 ![alt text](misc/gc3.svg)
 
-### Mutator and write barrier
+## Mutator and write barrier
 Main program which executes concurrently with GC called *mutator*. Mutator changes state of the heap and responsible for: object creation, pointer movement, etc. Such actions could invalidate consistency algorithm of GC. Should you run GC with mutator concurrently, heap will be left with black objects pointing to white objects. *Write barrier* comes into place as it forbids mutator to invalidate heap consistency during GC mark phase.
 
 Write barrier activated or disabled obly at the moment of stop the world (STW) phase of GC.
 
-### Pacer
+## Pacer
 
 *Pacer* decides when to run GC. Pacer enables GC on heap doubling in size. Coefficient could be changed via `GOGC` global variable.
 
-### GC full cycle
+## GC full cycle
 1. Sweep termination
 
 - Change GC state to `_GCoff`.
@@ -2466,7 +2603,7 @@ Write barrier activated or disabled obly at the moment of stop the world (STW) p
 	About 25% of CPU is allocated for goroutine that run mark phase
 
 - Enable write barrier.
-- Run main programm – Start the world.
+- Run main program – Start the world.
 - Scan global variables and goroutines stacks. Goroutine is paused if its stack is being scanned.
 - Run tricolor algorithm.
 
@@ -2483,7 +2620,11 @@ Write barrier activated or disabled obly at the moment of stop the world (STW) p
 - Start the world.
 - Release all resources which were allocated for GC
 
-### Optimizations
+## Rule of thumbs
+Return copies
+Reduce number of objects (many objects on heap is death)
+
+## Optimizations
 
 GC could become bottleneck when it comes to performance of a program. Some recommendations for better performance:
 
@@ -2491,9 +2632,13 @@ GC could become bottleneck when it comes to performance of a program. Some recom
 - Use `sync.Pool`.
 - Avoid allocationg heap objects.
 
+(TODO): горутины шедулер гибридный!!!!!!!!!
+sysmon горутина
+epoll механизм netpoller этим занимается
 
-## Memory leaks https://dev.to/gkampitakis/memory-leaks-in-go-3pcn#common-causes-for-memory-leaks-in-go
-### https://dave.cheney.net/2016/12/22/never-start-a-goroutine-without-knowing-how-it-will-stop
+
+# Memory leaks https://dev.to/gkampitakis/memory-leaks-in-go-3pcn#common-causes-for-memory-leaks-in-go
+## https://dave.cheney.net/2016/12/22/never-start-a-goroutine-without-knowing-how-it-will-stop
 
 ```go
 ch := somefunction() // we don't know whether channel will be closed, hence potential goroutine leak
@@ -2502,7 +2647,7 @@ go func() {
 }()
 ```
 
-### Goroutine leaks https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html
+## Goroutine leaks https://www.ardanlabs.com/blog/2018/11/goroutine-leaks-the-forgotten-sender.html
 Goroutine stacks allocates on process heap, hence infinite Goroutine recursion leads not to stack overflow but to OOM (out of memory) error.
 One of common mistakes when programmer forgets to cancel Goroutines context on gRPC call.
 **The important connotation is that any goroutine leak means its resources would not be released.**
@@ -2587,7 +2732,7 @@ PASS
 ```
 
 Every time you write the statement go in a program, you should consider the question of how, and under what conditions, the goroutine you are about to start, will end.
-### Unbounded resource creation
+## Unbounded resource creation
 ```go
 var cache = map[int]int{}
 
@@ -2778,29 +2923,761 @@ Some things to keep in mind
 - No worrying about pool overflow
 - Pool with limited size may be created with buffered channel
 
+# Go Scheduler
+## Part I; OS Scheduler https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html
+
+*Concurrency is a way to structure program and parallelism is a way a program executes its code.*
+
+Every program you run creates a Process and each Process is given an initial Thread.
+All these different Threads run independently of each other and scheduling decisions are made at the Thread level, not at the Process level.
+Threads can run concurrently (each taking a turn on an individual core), or in parallel (each running at the same time on different cores).
+Threads also maintain their own state to allow for the safe, local, and independent execution of their instructions.
+
+### Thread States
+
+A Thread can be in one of three states: *Waiting*, *Runnable* or *Executing*.
+
+#### Waiting
+
+This means the Thread is stopped and waiting for something in order to continue.
+This could be for reasons like, waiting for the **hardware (disk, network)**, **the operating system (system calls)** or **synchronization calls (atomic, mutexes)**.
+These types of latencies are a root cause for bad performance.
+
+#### Runnable
+
+This means the Thread wants time on a core so it can exute its assigned machine instructions.
+If you have a lot of threads that want time, then Threads have to wait longer to get time.
+With that the individual amount of time any given Thread gets shortened. This means context switch will be executed more frequently.
+That type of latency can also be bad for performance.
+
+#### Executing
+
+Thread have been put on a core and executing machine instructuions at the time. The work related to application is getting done. That what everyone wants.
+
+## Types of work
+
+### CPU-Bound
+
+This type of work that never creates a situation where thread may be placed in *Waiting* states.
+
+### IO-Bound
+
+This type of work causes *Waiting* state. Some types of work of IO-Bound:
+- Access to database
+- Access to network
+- Making system call
+- Synchronization events like atomic and mutexes
+
+## Context switch
+
+The physical act of swapping Threads on a core is called a *context switch*.
+A context switch happens when the scheduler pulls an *Executing* thread off a core and replaces it with a *Runnable* Thread.
+The Thread that was selected from the run queue moves into an *Executing* state. The Thread that was pulled can move back into a *Runnable* state (if it still has the ability to run),
+or into a *Waiting* state (if was replaced because of an IO-Bound type of request).
+
+Context switch considered expensive due to moving caches off and on a core with up to 12k or 18k of instructions.
+
+### IO-Bound work oriented program
+
+If you have a program that is focused on IO-Bound work, then context switches are going to be an advantage.
+Once a Thread moves into a Waiting state, another Thread in a Runnable state is there to take its place.
+This allows the core to always be doing work. This is one of the most important aspects of scheduling.
+Don't allow a core to go idle if there is work (Threads in a Runnable state) to be done.
+
+### CPU-Bound work oriented program
+
+If your program is focused on CPU-Bound work, then context switches are going to be a performance nightmare.
+Since the Thead always has work to do, the context switch is stopping that work from progressing.
+This situation is in stark contrast with what happens with an IO-Bound workload.
+
+## Part II; Go Scheduler https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html
+
+### Intruduction
+
+Go scheduler has GPM model:
+- G – Goroutine
+- P – processor
+- M – Machine or OS thread
+
+There are N number of P's allocated for work, where N is number of hardware threads.
+For example Intel Core i7 has 4 cores and Hyper-Threading, meaning there are 2 hardware threads per physical core.
+This will report to the Go program that 8 virtual cores are avaliable for executing OS Threads in parallel.
+
+![Scheduler 1](misc/scheduler1.svg)
+
+### Cooperating Scheduler
+
+The OS scheduler is a preemptive scheduler. Essentially that means you can’t predict what the scheduler is going to do at any given time.
+The kernel is making decisions and everything is non-deterministic.
+Applications that run on top of the OS have no control over what is happening inside the kernel with scheduling **unless they leverage synchronization primitives like atomic instructions and mutex calls**.
+
+The Go scheduler is part of the Go runtime, and the Go runtime is built into your application. This means the Go scheduler runs in user space, above the kernel.
+Current Go implementation is as cooperative scheduler. Being cooperative scheduler means the scheduler needs well-defined user space events that happen at safe points in the code to make scheduling decisions.
+
+Key takeaways:
+- You can control what OS scheduler will do via `atomic` or `mutex`
+- Go scheduler operates in runtime, so it operates in **user space**
+
+### Goroutine States
+
+- Waiting: waits for system call to end or waits for synchronization call (`atomic` or `mutex`)
+
+- Runnable: wants time on Machine; Large number of Goroutines can cause longer wait times in queue, as well as each Goroutine will have lesser time to execute; This type of latency can be a cause of bad performance.
+
+- Executing: Goroutine currently running being placed on Machine; The work related to application is getting done. That what we want.
+
+### Context switching
+
+There are four types of events that allows scheduler to make a scheduling decisions:
+
+1. The use of keyword `go`
+
+Once Goroutine is created it gives scheduler an opportunity to make a decision
+
+2. Garbage collection
+
+When GC is running, a lot of scheduling decisions are being made
+
+3. System calls
+
+4. Synchronization and Orchestration
+
+Mutexes, atomics and channel operations
+
+### Asynchronous System Calls
+
+There is Net Poller that getting work done when system call arrives at Goroutine.
+
+![Net Poller 1](misc/netpoller1.svg)
+
+![Net Poller 2](misc/netpoller2.svg)
+
+![Net Poller 3](misc/netpoller3.svg)
+
+Once Goroutine-1 can be context-switched back on the M, the Go related code it’s responsible for can execute again.
+The big win here is that, to execute network system calls, no extra Machines are needed. The Network Poller has an OS Thread and it is handling an efficient event loop.
+
+### Synchronous System Calls
+
+What happens if system call cannot be executed asynchronously (for example file-based system calls)?
+
+![Sync 1](misc/sync1.svg)
+
+![Sync 2](misc/sync2.svg)
+
+![Sync 3](misc/sync3.svg)
+
+At this point, Goroutine-1 can move back into the LRQ and be serviced by the P again. M1 is then placed on the side for future use if this scenario needs to happen again.
+
+### Work stealing algorithm
+
+```
+runtime.schedule() {
+    // only 1/61 of the time, check the global runnable queue for a G.
+    // if not found, check the local queue.
+    // if not found,
+    //     try to steal from other Ps.
+    //     if not, check the global runnable queue.
+    //     if not found, poll network.
+}
+```
+
+### Practical example
+
+#### C program
+
+![C threads](misc/c-threads.svg)
+
+All these context switches (5 times) and state changes require time to be performed which limits how fast the work can be done. Each context switch indroduces petential up to 12k instructions. Since threads are also bouncing between cores, the chances of incurring additional latency due to cache-line misses are also high.
+
+
+#### Go program
+
+![Go threads](misc/go-threads.svg)
+
+Goroutines use same OS thread, so there are no context switches on OS level. Goroutine context switch costs 2.4k instructions so there is a win as well.
+
+## Part III; Concurrency https://www.ardanlabs.com/blog/2018/12/scheduling-in-go-part3.html
+
+### Workloads
+
+How do you know when out of order execution may be possible or make sense? Understanding the type of workload your problem is handling is a great place to start. There are two types of workloads that are important to understand when thinking about concurrency.
+
+#### CPU-Bound
+
+Goroutines **does not** move naturally in and out of *Waiting* states. This is work that is constantly making calculations.
+
+1. Definition
+CPU-bound tasks are constrained by the speed of the CPU. These tasks involve heavy computation, such as mathematical calculations, data processing, or encoding/decoding.
+
+2. Key Characteristics:
+- The CPU is fully utilized during these tasks.
+- Performance depends on the processing power of the CPU.
+- These tasks can become bottlenecks if they monopolize the CPU cores.
+
+3. Handling
+- To utilize multiple CPU cores, Go provides the runtime.GOMAXPROCS function, allowing you to set the number of operating system threads for Goroutines.
+- Parallelism is essential for CPU-bound tasks to divide the workload across multiple cores.
+- Use worker pools to distribute CPU-heavy tasks.
+
+4. Optimization Focus
+- Improve algorithm efficiency.
+- Distribute computation across multiple cores or machines.
+
+#### IO-Bound
+
+This is a workload that causes Goroutines **to naturally enter into *Waiting* states**.
+
+1. Definition
+IO-bound tasks are constrained by the speed of Input/Output operations such as reading/writing files, network requests, database queries, or any task that involves waiting on external systems.
+
+2. Key Characteristics
+- The CPU is idle while waiting for the IO operation to complete.
+- Performance depends on external factors like disk speed, network latency, or database response time.
+- Often involves blocking calls that pause execution until the IO operation finishes.
+
+3. Handling
+- Goroutines shine for IO-bound work. Since Goroutines are lightweight and managed by the Go runtime, you can easily perform concurrent IO operations without consuming significant resources.
+- The Go runtime efficiently parks Goroutines that are waiting for IO, freeing up the underlying threads for other tasks.
+
+4. Optimization focus
+- Minimize IO latency.
+- Use buffering, caching, or parallel requests to improve throughput.
+
+#### Conclusion
+
+| Aspect                 | IO-Bound Work                       | CPU-Bound Work                       |
+|------------------------|-------------------------------------|--------------------------------------|
+| **Primary Constraint** | IO operations (e.g., network, disk) | CPU processing power                 |
+| **Resource Usage**     | Low CPU usage, high IO latency      | High CPU usage, low IO latency       |
+| **Concurrency**        | High concurrency with Goroutines    | Limited by number of CPU cores       |
+| **Optimization**       | Reduce IO latency                   | Efficient algorithms, parallelism    |
+| **Example Tasks**      | File reads, HTTP requests           | Data processing, encryption, sorting |
+
+### Test cases
+
+#### Adding numbers
+
+```go
+func init() {
+	rand.Seed(uint64(time.Now().Nanosecond()))
+}
+
+func BenchmarkSequential(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		add(generateList(1000))
+	}
+}
+
+func BenchmarkConcurrent(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		addConcurrent(runtime.NumCPU(), generateList(1000))
+	}
+}
+
+func generateList(totalNumbers int) []int {
+	numbers := make([]int, totalNumbers)
+	for i := 0; i < totalNumbers; i++ {
+		numbers[i] = rand.Intn(totalNumbers)
+	}
+	return numbers
+}
+
+func add(numbers []int) int {
+	var v int
+	for _, n := range numbers {
+		v += n
+	}
+	return v
+}
+
+func addConcurrent(goroutines int, numbers []int) int {
+	var v int64
+	totalNumbers := len(numbers)
+	lastGoroutine := goroutines - 1
+	stride := totalNumbers / goroutines
+
+	var wg sync.WaitGroup
+	wg.Add(goroutines)
+
+	for g := 0; g < goroutines; g++ {
+		go func(g int) {
+			start := g * stride
+			end := start + stride
+			if g == lastGoroutine {
+				end = totalNumbers
+			}
+
+			var lv int
+			for _, n := range numbers[start:end] {
+				lv += n
+			}
+
+			atomic.AddInt64(&v, int64(lv))
+			wg.Done()
+		}(g)
+	}
+
+	wg.Wait()
+
+	return int(v)
+}
+```
+
+Concurrency WITHOUT parallelism
+```
+GOGC=off go test -cpu 1 -run none -bench . -benchtime 3s
+goos: darwin
+goarch: arm64
+pkg: go_manual
+cpu: Apple M2 Pro
+BenchmarkSequential 28368 360129 ns/op : 2% faster
+BenchmarkConcurrent 28866 367691 ns/op
+```
+
+Concurrency WITH parallelism
+
+```
+GOGC=off go test -cpu 8 -run none -bench . -benchtime 3s
+goos: darwin
+goarch: arm64
+pkg: go_manual
+cpu: Apple M2 Pro
+BenchmarkSequential-8 28350 359673 ns/op
+BenchmarkConcurrent-8 27261 345574 ns/op : 4% faster
+```
+
+#### Sorting
+
+It is impossible to use concurrency on sorting algorithm. We would be left with unsorted array after concurrent work.
+See example below.
+```
+Before:
+  25 51 15 57 87 10 10 85 90 32 98 53
+  91 82 84 97 67 37 71 94 26  2 81 79
+  66 70 93 86 19 81 52 75 85 10 87 49
+
+After:
+  10 10 15 25 32 51 53 57 85 87 90 98
+   2 26 37 67 71 79 81 82 84 91 94 97
+  10 19 49 52 66 70 75 81 85 86 87 93
+```
+
+Need to sort sequentially after this.
+
+#### Reading files
+
+This is IO-Bound operation.
+
+```go
+func main() {
+	docs := generateList(1e3)
+
+	fmt.Println(find("Go", docs))
+	fmt.Println(findConcurrent(runtime.NumCPU(), "Go", docs))
+}
+
+func generateList(totalDocs int) []string {
+	docs := make([]string, totalDocs)
+	for i := 0; i < totalDocs; i++ {
+		docs[i] = "test.xml"
+	}
+	return docs
+}
+
+func read(doc string) ([]item, error) {
+	time.Sleep(time.Millisecond) // Simulate blocking disk read.
+	var d document
+	if err := xml.Unmarshal([]byte(file), &d); err != nil {
+		return nil, err
+	}
+	return d.Channel.Items, nil
+}
+
+func find(topic string, docs []string) int {
+	var found int
+	for _, doc := range docs {
+		items, err := read(doc)
+		if err != nil {
+			continue
+		}
+		for _, item := range items {
+			if strings.Contains(item.Description, topic) {
+				found++
+			}
+		}
+	}
+	return found
+}
+
+func findConcurrent(goroutines int, topic string, docs []string) int {
+	var found int64
+
+	ch := make(chan string, len(docs))
+	for _, doc := range docs {
+		ch <- doc
+	}
+	close(ch)
+
+	var wg sync.WaitGroup
+	wg.Add(goroutines)
+
+	for g := 0; g < goroutines; g++ {
+		go func() {
+			var lFound int64
+			for doc := range ch {
+				items, err := read(doc)
+				if err != nil {
+					continue
+				}
+				for _, item := range items {
+					if strings.Contains(item.Description, topic) {
+						lFound++
+					}
+				}
+			}
+			atomic.AddInt64(&found, lFound)
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+
+	return int(found)
+}
+```
+
+Concurrency WITHOUT parallelism
+```
+10 Thousand Documents using 8 goroutines with 1 core
+2.9 GHz Intel 4 Core i7
+Concurrency WITHOUT Parallelism
+-----------------------------------------------------------------------------
+$ GOGC=off go test -cpu 1 -run none -bench . -benchtime 3s
+goos: darwin
+goarch: amd64
+pkg: github.com/ardanlabs/gotraining/topics/go/testing/benchmarks/io-bound
+BenchmarkSequential      	       3	1483458120 ns/op
+BenchmarkConcurrent      	      20	 188941855 ns/op : ~87% Faster
+BenchmarkSequentialAgain 	       2	1502682536 ns/op
+BenchmarkConcurrentAgain 	      20	 184037843 ns/op : ~88% Faster
+```
+
+Concurrency WITH parallelism
+
+```
+10 Thousand Documents using 8 goroutines with 1 core
+2.9 GHz Intel 4 Core i7
+Concurrency WITH Parallelism
+-----------------------------------------------------------------------------
+$ GOGC=off go test -run none -bench . -benchtime 3s
+goos: darwin
+goarch: amd64
+pkg: github.com/ardanlabs/gotraining/topics/go/testing/benchmarks/io-bound
+BenchmarkSequential-8        	       3	1490947198 ns/op
+BenchmarkConcurrent-8        	      20	 187382200 ns/op : ~88% Faster
+BenchmarkSequentialAgain-8   	       3	1416126029 ns/op
+BenchmarkConcurrentAgain-8   	      20	 185965460 ns/op : ~87% Faster
+```
+
+# Goroutine leak
+
+## What is goroutine leak?
+
+A goroutine leak occurs when a **goroutine remains active indefinitely without completing its task or getting cleaned up**. This can happen due to various reasons, such as **blocked channels**, **infinite loops**, or **forgotten goroutines**. Over time, leaked goroutines can accumulate, leading to increased memory usage and **degraded application performance**.
+
+## Monitoring with runtime
+
+We can see number of goroutines via `runtime.NumGoroutine()`
+
+```go
+package main
+
+import (
+    "fmt"
+    "runtime"
+    "time"
+)
+
+func main() {
+    go func() {
+        for {
+            time.Sleep(10 * time.Second)
+        }
+    }()
+
+    time.Sleep(1 * time.Second)
+    fmt.Println("Number of Goroutines:", runtime.NumGoroutine())
+}
+```
+```
+Number of Goroutines: 2
+```
+
+## Profiling with `pprof`
+
+```go
+package main
+
+import (
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"sync"
+)
+
+func main() {
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	// Your application code
+}
+```
+
+Download trace from `http://localhost:6060/debug/pprof/goroutine` named `goroutine`
+
+Then use downloaded file in command
+`go tool pprof -http localhost:6061 goroutine`
+
+We can observe program traces
+![pprof 1](misc/pprof1.png)
+
+## Leaging scenarios
+
+### Scenario 1: Blocked on channel
+
+#### Problem
+
+A goroutine is waiting indefinitely for a value from a channel that is never sent.
+
+```go
+func receive1(ch chan int) {
+	fmt.Println(<-ch) // Goroutine leaks if no value is sent to ch
+}
+
+func LeakProblem1() {
+	ch := make(chan int)
+	go receive1(ch)
+	// No value sent to ch, causing receive to block forever
+}
+
+func TestLeakProblem1(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	LeakProblem1()
+}
+```
+
+#### Solution
+
+Ensure that the channel is either closed or always has a value sent.
+
+```go
+func receive2(ch chan int) {
+	select {
+	case val := <-ch:
+		fmt.Println(val)
+	case <-time.After(time.Second * 5):
+		return
+	}
+}
+
+func LeakProblemSolution1() {
+	ch := make(chan int)
+	go receive2(ch)
+	time.Sleep(time.Second)
+
+	ch <- 42 // or close(ch)
+}
+
+func TestLeakProblemSolution1(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	LeakProblemSolution1()
+}
+```
+### Scenario 2: Forgotten Goroutine
+
+#### Problem
+
+A Goroutine started but forgotten
+
+```go
+func LeakProblem2() {
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			fmt.Println("Doing work")
+		}
+	}()
+	// The goroutine runs indefinitely
+}
+```
+
+Use context to manage the lifecycle of the Goroutine
+
+```go
+func LeakProblemSolution2() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func(ctx context.Context) {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(2 * time.Second):
+			// doing work
+		}
+	}(ctx)
+
+	// Some work
+	time.Sleep(time.Second * 2)
+}
+```
+
+### Scenario 3: Leaking in a loop
+
+#### Problem
+
+Spawning Goroutine inside a loop without proper termination
+
+```go
+func LeakProblem3() {
+	for i := 0; i < 10; i++ {
+		go func() {
+			fmt.Println("Goroutine", i)
+		}()
+	}
+}
+```
+
+#### Solution
+
+Use a wait group to ensure all Goroutines complete
+
+```go
+func LeakProblemSolution3() {
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(j int) {
+			defer wg.Done()
+			fmt.Println("Goroutine", j)
+		}(i)
+	}
+	wg.Wait()
+}
+```
+
+### Key takeaways
+
+1. Use tests for investigate goroutines leaks
+2. Use context to manage goroutines lifecycle
+3. Use channels, WaitGroups and other synchronization techniques to ensure goroutines terminate correctly
+4. Always defer wg.Done() call
+
+# Goroutine leak detector https://habr.com/ru/companies/otus/articles/554624/
+
+We could use goroutines leak detector from Uber `go.uber.org/goleak`
+
+```go
+package main
+
+import (
+	"testing"
+	"time"
+
+	"go.uber.org/goleak"
+)
+
+func leak() error {
+	go func() {
+		time.Sleep(time.Minute)
+	}()
+
+	return nil
+}
+
+func TestLeakFunction(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	if err := leak(); err != nil {
+		t.Fatal("error not expected")
+	}
+}
+```
+
+```
+Running tool: /opt/homebrew/bin/go test -timeout 30s -run ^TestLeakFunction$ go_manual
+
+=== RUN   TestLeakFunction
+    /Users/ayionov/Desktop/cs/language/go/go_manual/goroutine_leak_test.go:24: found unexpected goroutines:
+        [Goroutine 35 in state sleep, with time.Sleep on top of the stack:
+        time.Sleep(0xdf8475800)
+                /opt/homebrew/Cellar/go/1.23.4/libexec/src/runtime/time.go:300 +0xe0
+        go_manual.leak.func1()
+                /Users/ayionov/Desktop/cs/language/go/go_manual/goroutine_leak_test.go:12 +0x28
+        created by go_manual.leak in goroutine 34
+                /Users/ayionov/Desktop/cs/language/go/go_manual/goroutine_leak_test.go:11 +0x24
+        ]
+--- FAIL: TestLeakFunction (0.44s)
+FAIL
+FAIL    go_manual       0.851s
+```
+
+`... found unexpected goroutines ...` indicates that could above has goroutine leak
+
+
+
+
+
+
+
+
+
+
+
+
+
 ---
-
-
-
 
 TODO:
 8. strings
 9. closure
 10. marshalling internals
   - custom marshalling
-11. goroutines, scheduler and concurrency https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html
+11.
+  - sysmon
+  - goroutines context switch https://freedium.cfd/https://medium.com/a-journey-with-go/go-what-does-a-goroutine-switch-actually-involve-394c202dddb7
+  - goroutines stack size https://habr.com/ru/companies/otus/articles/527748/
+  - OS thread context switch, size of OS thread
   - atomics
-  - context
+  - kqueue (MacOS), epoll (Linux), IOCP (Windows) https://go.dev/src/runtime/netpoll.go
+  - Epoll vs select / poll
+  - какие события в дескрипторе можно зарегистрировать
+  - edge-trigger, level-trigger https://go.dev/src/runtime/netpoll.go
+  - non blocking socket
+  - go signals https://medium.com/a-journey-with-go/go-gsignal-master-of-signals-329f7ff39391
   - net poller
   - unix threads
-  - context switch (including internals)
   - internals
   - GOMAXPROCS
-  - race condition and data race
-  - rwmutex, mutex
+  - deadlock, race condition and data race
+  - rwmutex vs mutex
   - select
+  - sync.Cond
+  - sync.Once
   - sync.Map
   - channels
+    - channels vs locks – pros and cons
+	- write to close channel, write to nil channel
+	- CSP
   - system calls + io system calls
 20. pprof
 21. benchmarking
