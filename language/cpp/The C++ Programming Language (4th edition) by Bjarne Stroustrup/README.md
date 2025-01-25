@@ -1,5 +1,5 @@
 ## Progress
-### 0 / 1
+### 1 / 1
 
 # The C++ Programming Language (4th edition) by Bjarne Stroustrup
 
