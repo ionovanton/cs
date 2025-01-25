@@ -1,4 +1,4 @@
-## cs &nbsp;&nbsp;![cs](https://progressbar-guibranco.vercel.app/2/?title=140/5555)
+## cs &nbsp;&nbsp;![cs](https://progressbar-guibranco.vercel.app/2/?title=141/5555)
 ### distributed-systems
 ![distributed-systems](https://progressbar-guibranco.vercel.app/0/?title=0/1)
 ### databases
@@ -20,7 +20,7 @@
 ### linux
 ![linux](https://progressbar-guibranco.vercel.app/0/?title=0/5)
 ### system-design
-![system-design](https://progressbar-guibranco.vercel.app/0/?title=0/113)
+![system-design](https://progressbar-guibranco.vercel.app/0/?title=1/113)
 ### compilers
 ![compilers](https://progressbar-guibranco.vercel.app/2/?title=10/380)
 ### operating-systems
