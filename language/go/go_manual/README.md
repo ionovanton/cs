@@ -6,13 +6,20 @@
 - [Slice](#slice)
 	- [Slices](#slices)
 	- [Slice tricks](#slice-tricks)
+- [Strings](#strings)
+	- [A string is a slice of bytes](#a-string-is-a-slice-of-bytes)
+	- [A string is not a `[]byte`](#a-string-is-not-a-byte)
+	- [Strings are read-only](#strings-are-read-only)
+		- [Problem](#problem)
+		- [Solution](#solution)
+	- [Summary](#summary)
 - [Interface](#interface)
 	- [Interface internals](#interface-internals)
 		- [`iface` vs `eface`](#iface-vs-eface)
 			- [`Type` structure](#type-structure)
 		- [Comparing interface and `nil`](#comparing-interface-and-nil)
 		- [Compiler determines whether struct implements interface](#compiler-determines-whether-struct-implements-interface)
-		- [How interface is being built https://studygolang.com/articles/28873](#how-interface-is-being-built-httpsstudygolangcomarticles28873)
+		- [How interface is being built](#how-interface-is-being-built)
 		- [Polymorphism and how much it costs](#polymorphism-and-how-much-it-costs)
 		- [Why do `T` and `*T` have different method sets?](#why-do-t-and-t-have-different-method-sets)
 				- [How methods can be called on various receivers](#how-methods-can-be-called-on-various-receivers)
@@ -49,6 +56,63 @@
 			- [fmt.Print](#fmtprint)
 		- [Can't take the address of element](#cant-take-the-address-of-element)
 		- [Evacuation](#evacuation)
+	- [As of Go 1.24](#as-of-go-124)
+		- [Old map problems](#old-map-problems)
+		- [What's new](#whats-new)
+			- [Metadata Layout](#metadata-layout)
+			- [Metadata Information](#metadata-information)
+			- [Metadata Lookup](#metadata-lookup)
+			- [Operation Complexity](#operation-complexity)
+- [Marshalling](#marshalling)
+	- [Custom marshalling](#custom-marshalling)
+- [\[TODO\] Concurrency in Go](#todo-concurrency-in-go)
+	- [Channels by Nikolay Tulzov](#channels-by-nikolay-tulzov)
+		- [Internals](#internals)
+		- [Buffered channel algorithms](#buffered-channel-algorithms)
+			- [Sender algorithm](#sender-algorithm)
+			- [Reader algorithm](#reader-algorithm)
+			- [Resume sender](#resume-sender)
+			- [Resume reader](#resume-reader)
+		- [Unbuffered channel](#unbuffered-channel)
+		- [Closing channel](#closing-channel)
+	- [Channels by Anton Zhiyanov](#channels-by-anton-zhiyanov)
+		- [Buffered Channels](#buffered-channels)
+		- [No more than `N` goroutines to run](#no-more-than-n-goroutines-to-run)
+		- [`nil` channel](#nil-channel)
+	- [Pipelines by Anton Zhiyanov](#pipelines-by-anton-zhiyanov)
+		- [Cancel channel](#cancel-channel)
+		- [Done channel](#done-channel)
+		- [Merging N channels](#merging-n-channels)
+	- [Time by Anton Zhiyanov](#time-by-anton-zhiyanov)
+		- [Throttling](#throttling)
+		- [Backpressure](#backpressure)
+		- [Operation timeout](#operation-timeout)
+		- [Timer](#timer)
+		- [Ticker](#ticker)
+	- [Context by Anton Zhiyanov](#context-by-anton-zhiyanov)
+		- [Canceling with context](#canceling-with-context)
+		- [Timeout](#timeout)
+		- [Parent and child timeout](#parent-and-child-timeout)
+	- [Atomics](#atomics)
+		- [Data race](#data-race)
+	- [Semaphores](#semaphores)
+	- [\[TODO\] Signals](#todo-signals)
+	- [\[TODO\] `sync` package](#todo-sync-package)
+		- [`sync.Cond`](#synccond)
+		- [\[TODO\] `sync.Once`](#todo-synconce)
+	- [Race Condition and Data Race](#race-condition-and-data-race)
+		- [Race Condition](#race-condition)
+		- [Data Race](#data-race-1)
+	- [Deadlock, Livelock](#deadlock-livelock)
+		- [Deadlock](#deadlock)
+		- [Livelock](#livelock)
+	- [\[TODO\] CSP – Communication Sequential Processes](#todo-csp--communication-sequential-processes)
+	- [\[TODO\] kqueue (MacOS), epoll (Linux) and IOCP (Windows)](#todo-kqueue-macos-epoll-linux-and-iocp-windows)
+	- [\[TODO\] epoll vs select / poll](#todo-epoll-vs-select--poll)
+	- [\[TODO\] edge-trigger, level-trigger](#todo-edge-trigger-level-trigger)
+	- [\[TODO\] non-blocking socket](#todo-non-blocking-socket)
+	- [\[TODO\] System Calls and IO System Calls](#todo-system-calls-and-io-system-calls)
+- [\[TODO\] Go 1.24 – New Features](#todo-go-124--new-features)
 - [Memory](#memory)
 	- [Memory mental layout](#memory-mental-layout)
 - [Escape analysis](#escape-analysis)
@@ -84,7 +148,7 @@
 	- [Rule of thumbs](#rule-of-thumbs)
 	- [Optimizations](#optimizations)
 - [Memory leaks](#memory-leaks)
-	- [Never start a goroutine without kn](#never-start-a-goroutine-without-kn)
+	- [Never start a goroutine without knowing how it will stop](#never-start-a-goroutine-without-knowing-how-it-will-stop)
 	- [Goroutine leaks](#goroutine-leaks)
 	- [Unbounded resource creation](#unbounded-resource-creation)
 		- [Long lived references](#long-lived-references)
@@ -95,13 +159,13 @@
 	- [Profiling with `pprof`](#profiling-with-pprof)
 	- [Leaking scenarios](#leaking-scenarios)
 		- [Scenario 1: Blocked on channel](#scenario-1-blocked-on-channel)
-			- [Problem](#problem)
-			- [Solution](#solution)
-		- [Scenario 2: Forgotten Goroutine](#scenario-2-forgotten-goroutine)
 			- [Problem](#problem-1)
-		- [Scenario 3: Leaking in a loop](#scenario-3-leaking-in-a-loop)
-			- [Problem](#problem-2)
 			- [Solution](#solution-1)
+		- [Scenario 2: Forgotten Goroutine](#scenario-2-forgotten-goroutine)
+			- [Problem](#problem-2)
+		- [Scenario 3: Leaking in a loop](#scenario-3-leaking-in-a-loop)
+			- [Problem](#problem-3)
+			- [Solution](#solution-2)
 		- [Key takeaways](#key-takeaways)
 - [Goroutine leak detector](#goroutine-leak-detector)
 - [Go Scheduler](#go-scheduler)
@@ -148,10 +212,33 @@
 			- [Scenario 3: Channel Operations](#scenario-3-channel-operations)
 			- [Scenario 4: Sleep or Yield](#scenario-4-sleep-or-yield)
 		- [Context switch steps](#context-switch-steps)
-		- [Sysmon](#sysmon)
+		- [Network poller](#network-poller-1)
+			- [epoll (Linux)](#epoll-linux)
+			- [Sysmon](#sysmon)
+			- [Handoff](#handoff)
 			- [Responsibility](#responsibility)
 			- [Pace](#pace)
 			- [Asynchronous Preemption](#asynchronous-preemption)
+	- [\[TODO\] Goroutines Stack Size](#todo-goroutines-stack-size)
+	- [\[TODO\] Unix thread context switch and size of OS thread](#todo-unix-thread-context-switch-and-size-of-os-thread)
+	- [\[TODO\] `GOMAXPROCS`](#todo-gomaxprocs)
+	- [\[TODO\] Why Scheduler Considered Hybrid?](#todo-why-scheduler-considered-hybrid)
+	- [\[TODO\] Sysmon](#todo-sysmon)
+	- [\[TODO\] netpoller](#todo-netpoller)
+	- [\[TODO\] Channels vs Locks, Pros and Cons](#todo-channels-vs-locks-pros-and-cons)
+	- [\[TODO\] Channels and `for range` loop](#todo-channels-and-for-range-loop)
+- [\[TODO\] pprof](#todo-pprof)
+- [\[TODO\] Benchmarking](#todo-benchmarking)
+- [\[TODO\] In App Architecture](#todo-in-app-architecture)
+	- [\[TODO\] Where interface should be stored?](#todo-where-interface-should-be-stored)
+	- [\[TODO\] Folder Structure](#todo-folder-structure)
+	- [\[TODO\] Avito Architecture Guide](#todo-avito-architecture-guide)
+	- [\[TODO\] Solid and Go](#todo-solid-and-go)
+- [\[TODO\] Uber Go Style Guide](#todo-uber-go-style-guide)
+- [\[TODO\] Avito Style Guide](#todo-avito-style-guide)
+- [\[TODO\] Go Proverbs](#todo-go-proverbs)
+- [\[TODO\] Go Patterns](#todo-go-patterns)
+- [\[TODO\] Go Mistakes](#todo-go-mistakes)
 
 
 
@@ -387,6 +474,108 @@ func main() {
 	}
 }
 ```
+
+# Strings
+https://medium.com/@andreiboar/demystifying-golang-strings-05981b84f1a7
+
+Internals of `string`
+
+```go
+type stringStruct struct {
+	str unsafe.Pointer
+	len int
+}
+
+// Variant with *byte pointer type for DWARF debugging.
+type stringStructDWARF struct {
+	str *byte
+	len int
+}
+```
+
+## A string is a slice of bytes
+```go
+package main
+
+import "fmt"
+
+func main() {
+    str := "Hello André!"
+
+    for i := range 13 {
+       fmt.Print(str[i], " ")
+    }
+    fmt.Println()
+}
+```
+
+13 bytes here
+```
+72 101 108 108 111 32 65 110 100 114 195 169 33
+```
+
+or
+
+```
+48 65 6c 6c 6f 20 41 6e 64 72 c3 a9 21
+```
+
+First byte is 'H' – 0x48
+
+## A string is not a `[]byte`
+
+Notice that the data structure is similar to a slice but is missing the cap field.
+You can call slice functions on strings, but since they don’t have cap field, we cannot grow them with `append`.
+Strings are just slices of bytes without capacity.
+
+## Strings are read-only
+
+
+### Problem
+```go
+package main
+
+import "fmt"
+
+func main() {
+    str := "Hello André!"
+
+    fmt.Println(str[2]) // Even though you can do this
+    str[2] = byte(72)  // You cannot do this
+}
+```
+
+### Solution
+```go
+package main
+
+import "fmt"
+
+func main() {
+	str := "Hello André!"
+
+	fmt.Println(str[1]) // Even though you can do this
+	tmp := []rune(str)
+	tmp[1] = '4'
+	str = string(tmp)
+	fmt.Println(str)
+}
+```
+
+```
+101
+H4llo André!
+```
+
+## Summary
+
+- A string is a slice of bytes
+- Go uses UTF-8 for encoding text data.
+- Ranging over a string gives you a rune, not a byte
+- Strings are read-only
+- The zero value of a string is an empty string
+
+
 
 # Interface
 ## Interface internals
@@ -673,7 +862,9 @@ main.go:5:15: cannot use Strct{} (value of type Strct) as Inter value in variabl
 ```
 When compiler performs type checking phase it reports unimplemented interface
 
-### How interface is being built https://studygolang.com/articles/28873
+### How interface is being built
+https://studygolang.com/articles/28873
+
 Let's take a look at the following code
 ```go
 package main
@@ -2071,7 +2262,6 @@ func WithValue(parent Context, key, val any) Context {
 
 This way context.WithValue can avoid reimplementing same methods all over again
 
-
 # Defer statement
 https://everythingcoding.in/golang-defer/
 
@@ -2216,6 +2406,1297 @@ When all buckets are overloaded (> 6 elements per bucket) evacuation starts.
 Evacuation is incremental and executed per map access. Old map is catched by gc when all elements are evacuated.
 All operations are slowed down because of evacuation.
 That's why it's important to preallocate map once if we know how many elements will be in the map.
+
+## As of Go 1.24
+https://abseil.io/about/design/swisstables
+
+### Old map problems
+
+- Too many collisions in case of bad hashing leads to sequential search.
+- Map's key needs to be loaded multiple times to CPU register in order to compare with search key. Single operation is expensive let alone multiple ones.
+- Unpredictable memory access due to bucket's poor memory alingment. One bucket overflow leads to allocating new bucket with pointer pointing from the old one.
+
+### What's new
+
+#### Metadata Layout
+
+Hash function produces 64-bit hash value. We split it in two parts.
+- H1, a 57 bit hash value used to identify index within the table itself
+- H2, the remaining 7 bits of hash value, used to store metadata for this element. The H2 hash bits are stored seperately within the metadata section of the table.
+
+![swiss-tables-1](misc/swiss-tables-1.png)
+
+#### Metadata Information
+
+The metadata of Swiss table stores presence information (whether the element is empty, deleted or full). Each metadata entry consists of one byte, which consists of a single control bit and the 7 bit H2 hash. The control bit, in combination with the value in the H2 section of the metadata, indicates whether the associated hash element is empty, present, or has been deleted.
+
+![h2-metadata](misc/h2-metadata.png)
+
+#### Metadata Lookup
+
+1. Use the H1 hash to find the start of the “bucket chain” for that hash.
+2. Use the H2 hash to construct a mask.
+3. Use SSE instructions and the mask to produce a set of candidate matches.
+4. Perform an equality check on each candidate.
+5. If no element is found amongst the current candidates, go to the next group.
+6. Stop the search if at least one element is empty.
+
+#### Operation Complexity
+
+- Search, Insert, Delete – O(1) or O(n) where 'n' is number of collisions
+
+# Marshalling
+https://choly.ca/post/go-json-marshalling/
+
+## Custom marshalling
+
+Having some structure that we want to Marshal into JSON.
+```go
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"time"
+)
+
+type MyUser struct {
+	ID       int64     `json:"id"`
+	Name     string    `json:"name"`
+	LastSeen time.Time `json:"lastSeen"`
+}
+
+func main() {
+	_ = json.NewEncoder(os.Stdout).Encode(
+		&MyUser{1, "Ken", time.Now()},
+	)
+}
+```
+```
+{"id":1,"name":"Ken","lastSeen":"2009-11-10T23:00:00Z"}
+```
+
+What if we want to change some of the field values being displayed?
+```go
+func (u *MyUser) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		LastSeen int64  `json:"lastSeen"`
+	}{
+		ID:       u.ID,
+		Name:     u.Name,
+		LastSeen: u.LastSeen.Unix(),
+	})
+}
+```
+```
+{"id":1,"name":"Ken","lastSeen":1743588324}
+```
+
+This works, but it can be cumbersome where there are lots of fields. Lets change `MarshalJSON` method.
+```go
+func (u *MyUser) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		LastSeen int64 `json:"lastSeen"`
+		*MyUser
+	}{
+		LastSeen: u.LastSeen.Unix(),
+		MyUser:   u,
+	})
+}
+```
+```
+fatal error: stack overflow
+```
+
+The problem here is that the auxiliary struct will also inherit the original’s MarshalJSON method, causing it to go into an infinite loop. The solution is to alias the original type. This alias will have all the same fields, but none of the methods.
+In the code below we changed time to unix time and int64 id to string id.
+```go
+func (u *MyUser) MarshalJSON() ([]byte, error) {
+	type Alias MyUser
+	return json.Marshal(&struct {
+		LastSeen int64  `json:"lastSeen"`
+		ID       string `json:"id"`
+		*Alias
+	}{
+		LastSeen: u.LastSeen.Unix(),
+		ID:       strconv.FormatInt(u.ID, 10),
+		Alias:    (*Alias)(u),
+	})
+}
+```
+```
+{"lastSeen":1743588857,"id":"1","name":"Ken"}
+```
+
+The same technique can be used for implementing an `UnmarshalJSON` method.
+```go
+func (u *MyUser) UnmarshalJSON(data []byte) error {
+	type Alias MyUser
+	aux := &struct {
+		LastSeen int64 `json:"lastSeen"`
+		*Alias
+	}{
+		Alias: (*Alias)(u),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	u.LastSeen = time.Unix(aux.LastSeen, 0)
+	return nil
+}
+```
+
+
+# Concurrency in Go
+
+## Channels by Nikolay Tulzov
+https://youtu.be/ZTJcaP4G4JM?si=Fcf023AgL1CtxK93
+
+- Goroutine safe
+- FIFO semantic
+- Used for transfering data between goroutines
+- Stored in heap
+
+### Internals
+
+```go
+type hchan struct {
+	qcount   uint           // total data in the buffer (queue)
+	dataqsiz uint           // size of the circular buffer (queue)
+	buf      unsafe.Pointer // points to an array of dataqsiz elements
+	elemsize uint16
+	synctest bool           // true if created in a synctest bubble
+	closed   uint32         // indicated whether channel is closed
+	timer    *timer         // timer feeding this chan
+	elemtype *_type         // element type
+	sendx    uint           // send buffer index
+	recvx    uint           // receive buffer index
+	recvq    waitq          // list of recv waiters
+	sendq    waitq          // list of send waiters
+
+	// lock protects all fields in hchan, as well as several
+	// fields in sudogs blocked on this channel.
+	//
+	// Do not change another G's status while holding this lock
+	// (in particular, do not ready a G), as this can deadlock
+	// with stack shrinking.
+	lock mutex
+}
+```
+
+Channel buffer implemented as a circle queue.
+
+### Buffered channel algorithms
+
+#### Sender algorithm
+1. Lock channel's mutex
+2. Copy data to `buf[sendx]`
+3. Increment `sendx`
+4. Unlock channel's mutex
+
+#### Reader algorithm
+1. Lock channel's mutex
+2. Copy data from `buf[recvx]`
+3. Remove data from `buf[recvx]`
+4. Increment `recvx`
+5. Unlock channel's mutex
+
+#### Resume sender
+Sender will be paused if it fills channel's buffer to its max capacity. The sender will be put to `sendq`.
+When the receiver comes it will:
+- unpause sleeping goroutine by going to `sendq`, the sleeping goroutine state will be set to `runnable`
+- take next value from sleeping goroutine and put it to `buf`
+- increment `sendx`
+
+#### Resume reader
+Reader comes to channel that is empty. The reader will be put to sleep and `recvq` until sender comes to channel.
+When the sender comes it will:
+- send data directly to receiving goroutine
+- unpause sleeping goroutine
+
+### Unbuffered channel
+Data transfer directly between two or more goroutines. Each goroutine has access to stack of another goroutine.
+
+### Closing channel
+1. Throw panic if channel is uninitialized
+2. Lock mutex
+3. Throw panic if channel is closed
+4. Set `hchan.closed` to `true`
+5. Release all readers – all readers will receive zero value
+6. Release all writers – all writers will panic
+7. Unlock mutex
+8. Unpause all released goroutines
+
+## Channels by Anton Zhiyanov
+https://antonz.org/go-concurrency/channels/
+
+### Buffered Channels
+Buffered channels operate like queue. It allows the sender not to wait for the reader to read the value.
+
+Unbuffered channel example
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func Send(ch chan<- int) {
+	fmt.Println("sender: sending value")
+	ch <- 1
+	fmt.Println("sender: value is sent")
+}
+
+func Receive(ch <-chan int) {
+	fmt.Println("receiver: doing some work")
+	time.Sleep(100 * time.Millisecond) // do some work
+	fmt.Println("receiver: work is done")
+	value := <-ch
+	fmt.Println("receiver: received value ", value)
+}
+
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	ch := make(chan int)
+
+	go func() {
+		defer wg.Done()
+		Send(ch)
+	}()
+
+	go func() {
+		defer wg.Done()
+		Receive(ch)
+	}()
+
+	wg.Wait()
+}
+```
+```
+receiver: doing some work
+sender: sending value      <-- sending value and waiting for someone to read
+receiver: work is done
+receiver: received value 1 <-- wakes up sender
+sender: value is sent      <-- sender woke up
+```
+
+Buffered channel example
+```
+sender: sending value     <-- sends value
+sender: value is sent     <-- doesn't wait for someone to read, moves on
+receiver: doing some work
+receiver: work is done
+receiver: received value 1
+```
+
+### No more than `N` goroutines to run
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"strings"
+	"time"
+)
+
+const N = 4
+
+func main() {
+	// jobs
+	phrases := []string{
+		"a b c", "d e", "f", "g h", "i j k", "l m", "N",
+	}
+
+	pending := make(chan string)
+
+	// sending jobs to a job channel 'pending'
+	go func() {
+		for _, phrase := range phrases {
+			pending <- phrase
+		}
+		close(pending)
+	}()
+
+	done := make(chan struct{})
+
+	// start N workers
+	for i := 0; i < N; i++ {
+		go say(done, pending, i+1)
+	}
+
+	// wait for N workers to their completion
+	for i := 0; i < N; i++ {
+		<-done
+	}
+}
+
+func say(done chan<- struct{}, pending <-chan string, id int) {
+	for phrase := range pending {
+		for _, word := range strings.Fields(phrase) {
+			fmt.Printf("Worker #%d says: %s...\n", id, word)
+			dur := time.Duration(rand.Intn(100)) * time.Millisecond
+			time.Sleep(dur)
+		}
+	}
+	done <- struct{}{}
+}
+```
+
+### `nil` channel
+- Writing to a `nil` channel blocks goroutine forever.
+- Reading from a `nil` channel blocks goroutine forever.
+- Closing a `nil` channel causing panic.
+
+
+## Pipelines by Anton Zhiyanov
+https://antonz.org/go-concurrency/pipelines/
+
+### Cancel channel
+```go
+package main
+
+func main() {
+	a()
+}
+
+func b(cancel <-chan struct{}) {
+	// do work
+	select {
+	case <-cancel:
+		return
+	}
+}
+
+func a() {
+	cancel := make(chan struct{})
+	go b(cancel)
+	close(cancel)
+}
+```
+
+### Done channel
+```go
+package main
+
+func main() {
+	a()
+}
+
+func b(done chan<- struct{}) {
+	// do work
+	done <- struct{}{}
+}
+
+func a() {
+	done := make(chan struct{})
+	go b(done)
+
+	<-done
+}
+```
+
+### Merging N channels
+```go
+func asChan(values ...int) chan int {
+	ch := make(chan int, len(values))
+	for _, value := range values {
+		ch <- value
+	}
+	close(ch)
+	return ch
+}
+
+func main() {
+	a := asChan(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+	b := asChan(10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+	c := asChan(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
+	for v := range merge(a, b, c) {
+		fmt.Println(v)
+	}
+}
+
+func merge(cs ...<-chan int) <-chan int {
+	out := make(chan int)
+
+	var wg sync.WaitGroup
+	wg.Add(len(cs))
+	for _, c := range cs {
+		go func(ch <-chan int) {
+			defer wg.Done()
+			for v := range ch {
+				out <- v
+			}
+		}(c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	return out
+}
+```
+
+## Time by Anton Zhiyanov
+https://antonz.org/go-concurrency/time/
+
+### Throttling
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func work() {
+	// doing some work
+	time.Sleep(100 * time.Millisecond)
+}
+
+func main() {
+	handle, wait := throttle(5, work)
+
+	start := time.Now()
+	for i := 0; i < 10; i++ {
+		handle()
+	}
+	wait()
+
+	fmt.Println("elapsed:", time.Since(start))
+}
+
+func throttle(n int, fn func()) (func(), func()) {
+	// 'n' indicates how many goroutines can run simultaneously
+	sema := make(chan struct{}, n)
+
+	// Execute 'fn' functions concurrently
+	handle := func() {
+		sema <- struct{}{}
+		go func() {
+			fn()
+			<-sema
+		}()
+	}
+
+	// Wait until all functions have finished
+	wait := func() {
+		for i := 0; i < n; i++ {
+			sema <- struct{}{}
+		}
+	}
+	return handle, wait
+}
+```
+
+Two runners:
+```
+elapsed: 504.059334ms
+```
+
+Ten runners:
+```
+elapsed: 101.067333ms
+```
+
+### Backpressure
+
+Return an error If more than `n` goroutines are running.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
+func work() {
+	// doing some work
+	time.Sleep(100 * time.Millisecond)
+}
+
+func main() {
+	handle, wait := backpressure(4, work)
+
+	start := time.Now()
+	for i := 0; i < 10; i++ {
+		err := handle()
+		fmt.Printf("Call %d, err = %v\n", i+1, err)
+	}
+	wait()
+
+	fmt.Println("elapsed:", time.Since(start))
+}
+
+func backpressure(n int, fn func()) (func() error, func()) {
+	// 'n' indicates how many goroutines can run simultaneously
+	sema := make(chan struct{}, n)
+
+	// Execute 'fn' functions concurrently
+	handle := func() error {
+		select {
+		case sema <- struct{}{}:
+			go func() {
+				fn()
+				<-sema
+			}()
+		default:
+			return errors.New("busy")
+		}
+		return nil
+	}
+
+	// Wait until all functions have finished
+	wait := func() {
+		for i := 0; i < n; i++ {
+			sema <- struct{}{}
+		}
+	}
+	return handle, wait
+}
+```
+
+### Operation timeout
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
+func work() {
+	// doing some work
+	time.Sleep(1000 * time.Millisecond)
+}
+
+func main() {
+	err := withTimeout(time.Millisecond*200, work)
+	fmt.Println(err)
+}
+
+func withTimeout(timeout time.Duration, fn func()) error {
+	done := make(chan struct{})
+	go func() {
+		fn()
+		close(done)
+	}()
+	select {
+	case <-done:
+		return nil
+	case <-time.After(timeout):
+		return errors.New("timeout")
+	}
+}
+```
+
+### Timer
+Execute job after some period of time. 
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func work() {
+	fmt.Println("job is done")
+}
+
+func main() {
+	start := time.Now()
+	timer := time.NewTimer(2 * time.Second)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-timer.C
+		work()
+	}()
+	wg.Wait()
+
+	fmt.Println("elapsed", time.Since(start))
+}
+```
+```
+job is done
+elapsed 2.001256209s
+```
+
+Another example of delayed function execution comes with `time.AfterFunc`
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func work() {
+	fmt.Println("job is done")
+}
+
+func main() {
+	var wg sync.WaitGroup
+	start := time.Now()
+
+	wg.Add(1)
+	time.AfterFunc(time.Second*2, func() {
+		defer wg.Done()
+		work()
+	})
+	wg.Wait()
+
+	fmt.Println("elapsed", time.Since(start))
+}
+```
+```
+job is done
+elapsed 2.001154625s
+```
+
+### Ticker
+Perform an action at regular interval.
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func work(at time.Time) {
+	fmt.Println("work done at", at)
+}
+
+func main() {
+	// interval
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	// duration
+	timer := time.NewTimer(time.Second * 5)
+	defer timer.Stop()
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case at := <-ticker.C:
+				work(at)
+			case <-timer.C:
+				return
+			}
+		}
+	}()
+
+	wg.Wait()
+}
+```
+```
+work done at 2025-04-04 23:23:01.587748833 +0300 MSK m=+1.000094917
+work done at 2025-04-04 23:23:02.587749875 +0300 MSK m=+2.000095959
+work done at 2025-04-04 23:23:03.587749458 +0300 MSK m=+3.000094959
+work done at 2025-04-04 23:23:04.587750958 +0300 MSK m=+4.000095251
+work done at 2025-04-04 23:23:05.58775225 +0300 MSK m=+5.000096376
+```
+
+## Context by Anton Zhiyanov
+https://antonz.org/go-concurrency/context/
+
+### Canceling with context
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+)
+
+func work(ctx context.Context) {
+	ticker := time.NewTicker(time.Second)
+
+	for {
+		select {
+		case at := <-ticker.C:
+			fmt.Println("work done at", at)
+		case <-ctx.Done():
+			fmt.Println("cancel called")
+			return
+		}
+	}
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		work(ctx)
+	}()
+	time.AfterFunc(time.Second*5, func() {
+		defer wg.Done()
+		cancel()
+	})
+	wg.Wait()
+}
+```
+```
+work done at 2025-04-04 23:42:06.521526208 +0300 MSK m=+1.000128250
+work done at 2025-04-04 23:42:07.521526166 +0300 MSK m=+2.000125833
+work done at 2025-04-04 23:42:08.521527375 +0300 MSK m=+3.000125792
+work done at 2025-04-04 23:42:09.52153 +0300 MSK m=+4.000126126
+work done at 2025-04-04 23:42:10.521531458 +0300 MSK m=+5.000126167
+cancel called
+```
+
+### Timeout
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+func work(ctx context.Context, fn func() int) (int, error) {
+	ch := make(chan int)
+
+	go func() {
+		ch <- fn()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	case res := <-ch:
+		return res, nil
+	}
+}
+
+func main() {
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+
+	res, err := work(ctx, func() int {
+		time.Sleep(time.Second * 10)
+		return 42
+	})
+
+	fmt.Println(res, err)
+}
+```
+```
+0 context deadline exceeded
+```
+
+### Parent and child timeout
+The shorter timeout between the parent and child contexts always wins.
+The child context can only shorten the parent's timeout, not extend it.
+
+```go
+func main() {
+	parentCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	childCtx, cancel := context.WithTimeout(parentCtx, time.Second*2)
+	defer cancel()
+
+	res, err := work(childCtx, func() int {
+		time.Sleep(time.Second * 10)
+		return 42
+	})
+
+	fmt.Println(res, err)
+}
+```
+```
+0 context deadline exceeded
+```
+
+## Atomics
+
+### Data race
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+const n = 3
+
+func main() {
+	counter := 0
+
+	var wg sync.WaitGroup
+	wg.Add(n)
+	go func() {
+		defer wg.Done()
+		counter++
+	}()
+	go func() {
+		defer wg.Done()
+		counter += 2
+	}()
+	go func() {
+		defer wg.Done()
+		counter = 100
+	}()
+	wg.Wait()
+
+	fmt.Println(counter)
+}
+```
+
+`go run -race main.go`
+```
+WARNING: DATA RACE
+...
+103
+```
+
+Fix data race with operating on atomics.
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"sync/atomic"
+)
+
+const n = 3
+
+func main() {
+	counter := int32(0)
+
+	var wg sync.WaitGroup
+	wg.Add(n)
+	go func() {
+		defer wg.Done()
+		atomic.StoreInt32(&counter, 1)
+	}()
+	go func() {
+		defer wg.Done()
+		atomic.StoreInt32(&counter, 2)
+	}()
+	go func() {
+		defer wg.Done()
+		atomic.StoreInt32(&counter, 42)
+	}()
+	wg.Wait()
+
+	fmt.Println(counter)
+}
+```
+
+## Semaphores
+
+Fixed number of goroutines can run at the same time.
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+type Semaphore struct {
+	C chan struct{}
+}
+
+func (s *Semaphore) Acquire() {
+	s.C <- struct{}{}
+}
+
+func (s *Semaphore) Release() {
+	<-s.C
+}
+
+const N = 1
+
+func asChan(values ...int) chan int {
+	ch := make(chan int, len(values))
+	for _, value := range values {
+		ch <- value
+	}
+	close(ch)
+	return ch
+}
+
+func merge(cs ...<-chan int) <-chan int {
+	sema := Semaphore{
+		C: make(chan struct{}, N),
+	}
+
+	var wg sync.WaitGroup
+
+	out := make(chan int)
+
+	for i, c := range cs {
+		wg.Add(1)
+		go func(ch <-chan int, i int) {
+			fmt.Println("worker", i+1, "doing job")
+			sema.Acquire()
+			defer sema.Release()
+			defer wg.Done()
+			for value := range ch {
+				out <- value
+			}
+		}(c, i)
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+
+	return out
+}
+
+func main() {
+	a := asChan(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+	b := asChan(10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+	c := asChan(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
+	for v := range merge(a, b, c) {
+		fmt.Println(v)
+	}
+}
+```
+
+
+
+## Signals
+https://gobyexample.com/signals
+
+Interrupt a probram via terminal's SIGINT `^C` signal.
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+)
+
+func main() {
+	sigs := make(chan os.Signal)
+
+	signal.Notify(sigs, syscall.SIGINT)
+
+	done := make(chan struct{}, 1)
+
+	go func() {
+		sig := <-sigs
+		fmt.Println()
+		fmt.Println(sig)
+		done <- struct{}{}
+	}()
+
+	fmt.Println("awaiting signal")
+	<-done
+	fmt.Println("exiting")
+}
+```
+```
+awaiting signal
+^C
+interrupt
+exiting
+```
+
+## `sync` package
+
+### `sync.Cond`
+https://wcademy.ru/go-multithreading-sync-cond/
+
+Broadcast event to listeners when resource is unlocked.
+
+Problem: listeners first acquire mutex lock on some data. Later broadcaster is ready to supply with data that receivers are awaiting.
+Receivers will not get any data.
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func listen(name string, data map[string]string, mu *sync.Mutex) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	fmt.Printf("[%s] data received: %s\n", name, data["key"])
+}
+
+func broadcast(name string, data map[string]string, mu *sync.Mutex) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	data["key"] = "value"
+
+	fmt.Printf("[%s] data sent\n", name)
+
+}
+
+func main() {
+	data := make(map[string]string)
+	mu := sync.Mutex{}
+	wg := sync.WaitGroup{}
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		listen("listener 1", data, &mu)
+	}()
+	go func() {
+		defer wg.Done()
+		listen("listener 2", data, &mu)
+	}()
+
+	time.Sleep(time.Second)
+
+	go func() {
+		defer wg.Done()
+		broadcast("broadcaster", data, &mu)
+	}()
+
+	wg.Wait()
+}
+```
+```
+[listener 2] data received: 
+[listener 1] data received: 
+[broadcaster] data sent
+```
+
+The solution is for listeners wait for notification of data being sent with `sync.Cond`.
+This way broadcaster will notify the receivers.
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func listen(name string, data map[string]string, c *sync.Cond) {
+	c.L.Lock()
+	defer c.L.Unlock()
+	c.Wait()
+
+	fmt.Printf("[%s] data received: %s\n", name, data["key"])
+}
+
+func broadcast(name string, data map[string]string, c *sync.Cond) {
+	c.L.Lock()
+	defer c.L.Unlock()
+
+	data["key"] = "value"
+
+	c.Broadcast()
+
+	fmt.Printf("[%s] data sent\n", name)
+}
+
+func main() {
+	data := make(map[string]string)
+	cond := sync.NewCond(&sync.Mutex{})
+	wg := sync.WaitGroup{}
+
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		listen("listener 1", data, cond)
+	}()
+	go func() {
+		defer wg.Done()
+		listen("listener 2", data, cond)
+	}()
+
+	time.Sleep(time.Second)
+
+	go func() {
+		defer wg.Done()
+		broadcast("broadcaster", data, cond)
+	}()
+
+	wg.Wait()
+}
+```
+```
+[broadcaster] data sent
+[listener 1] data received: value
+[listener 2] data received: value
+```
+
+### `sync.Once`
+
+Do something exactly once among multiple goroutines.
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+func main() {
+	fn := sync.OnceFunc(func() {
+		fmt.Println("once")
+	})
+
+	var wg sync.WaitGroup
+	wg.Add(10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			fn()
+		}()
+	}
+
+	wg.Wait()
+}
+```
+
+## Race Condition and Data Race
+https://medium.com/german-gorelkin/race-8936927dba20
+
+### Race Condition
+
+The timing or order of events affects the correctness of the program.
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	go func() {
+		fmt.Printf("A->")
+	}()
+
+	go func() {
+		fmt.Printf("B")
+	}()
+	time.Sleep(time.Second)
+}
+```
+Expecting "A->B" and getting "BA->".
+
+
+### Data Race
+
+Condition where different threads access same data without any synchronization.
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+var count int32
+
+func deposit(delta int32) {
+	count += delta
+}
+
+func main() {
+	var wg sync.WaitGroup
+
+	wg.Add(1000)
+	for i := 0; i < 1000; i++ {
+		go func() {
+			defer wg.Done()
+			deposit(1)
+		}()
+	}
+	wg.Wait()
+
+	fmt.Println(count)
+}
+```
+```
+918
+```
+
+Operation `count += delta` is not atomic.
+
+## Deadlock, Livelock
+https://medium.com/german-gorelkin/deadlocks-livelocks-starvation-ccd22d06f3ae
+
+### Deadlock
+
+Multiple processes have cyclic dependency.
+
+Example:
+- Process 1 has lock on resource A, then wants lock on B.
+- Process 2 has lock on resource B, then wants lock on A.
+
+### Livelock
+
+These are programs that actively perform parallel operations, but these operations have no effect on moving the program's state forward.
+
+Example:
+- Two persons meet face to face in tight corridor. Both of them try to let the other go.
+
+## [TODO] CSP – Communication Sequential Processes
+
+## [TODO] kqueue (MacOS), epoll (Linux) and IOCP (Windows)
+https://go.dev/src/runtime/netpoll.go
+
+## [TODO] epoll vs select / poll
+
+## [TODO] edge-trigger, level-trigger
+https://go.dev/src/runtime/netpoll.go
+
+## [TODO] non-blocking socket
+
+## [TODO] System Calls and IO System Calls
+
+# [TODO] Go 1.24 – New Features
+https://habr.com/ru/companies/otus/articles/881708/
 
 # Memory
 ## Memory mental layout
@@ -2671,15 +4152,10 @@ GC could become bottleneck when it comes to performance of a program. Some recom
 - Use `sync.Pool`.
 - Avoid allocationg heap objects.
 
-(TODO): горутины шедулер гибридный!!!!!!!!!
-sysmon горутина
-epoll механизм netpoller этим занимается
-
-
 # Memory leaks 
 https://dev.to/gkampitakis/memory-leaks-in-go-3pcn#common-causes-for-memory-leaks-in-go
 
-## Never start a goroutine without kn
+## Never start a goroutine without knowing how it will stop
 https://dave.cheney.net/2016/12/22/never-start-a-goroutine-without-knowing-how-it-will-stop
 
 ```go
@@ -3297,6 +4773,8 @@ https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html
 
 https://habr.com/ru/articles/804145/
 
+https://youtu.be/kedW1xO3Zbo?si=dg78VysMJ89IKi-M
+
 ### Intruduction
 
 Go scheduler has GPM model:
@@ -3329,7 +4807,7 @@ The Go scheduler is part of the Go runtime, and the Go runtime is built into you
 #### Preemptive scheduling
 
 - Automatic preemption – Preemption points are introduced at function calls and safe points, ensuring the runtime can regain control of execution.
-- Timer based preemption – Since Go 1.2, preemption was introduced, allowing the scheduler to interrupt long-running goroutines (more than 10 ms). This ensures fairness and prevents a single goroutine from monopolizing the CPU.
+- Timer based preemption – Since Go 1.14, preemption was introduced, allowing the scheduler to interrupt long-running goroutines (more than 10 ms by sysmon). This ensures fairness and prevents a single goroutine from monopolizing the CPU.
 - GC and scheduling – The scheduler preempts goroutines for garbage collection, ensuring that the garbage collector can run without waiting for goroutines to yield explicitly.
 
 #### Cooperative scheduling
@@ -3708,7 +5186,6 @@ BenchmarkConcurrentAgain 	      20	 184037843 ns/op : ~88% Faster
 ```
 
 Concurrency WITH parallelism
-
 ```
 10 Thousand Documents using 8 goroutines with 1 core
 2.9 GHz Intel 4 Core i7
@@ -3723,7 +5200,6 @@ BenchmarkConcurrent-8        	      20	 187382200 ns/op : ~88% Faster
 BenchmarkSequentialAgain-8   	       3	1416126029 ns/op
 BenchmarkConcurrentAgain-8   	      20	 185965460 ns/op : ~87% Faster
 ```
-
 
 ## Context switch
 
@@ -3753,10 +5229,32 @@ When a goroutine explicitly sleeps (e.g., time.Sleep) or yields (runtime.Gosched
 2. Select Next Goroutine: The scheduler picks the next runnable goroutine from the ready queue.
 3. Restore State: The CPU registers are loaded with the selected goroutine’s state, updating the instruction and stack pointers.
 
-### Sysmon
+### Network poller
+
+- Goroutine is about to make a syscall
+- Goroutine state changes to 'Waiting'
+- Syscall is being registered to epoll (in Linux)
+- When syscall is over, change goroutine state to 'Runnable' and either:
+  - The runnable goroutine is pushed by sysmon to GRQ if no processor requested it for 10ms or more
+  - Or pushed to LRQ if processor requests it
+
+#### epoll (Linux)
+
+Provides system with mechanism that allows to make system calls without blocking.
+
+Every syscall is going to epoll. Responsible thread every now and then checks epoll for syscall completion.
+
+#### Sysmon
 https://freedium.cfd/https://medium.com/@blanchon.vincent/go-sysmon-runtime-monitoring-cff9395060b5
 
 Sysmon thread is not linked to any P in GMP model meaning it is not scheduled and always running.
+
+Every syscall call `sysmon` counts 10ms, if syscall is more than 10ms, execute handoff.
+
+#### Handoff
+
+Unlinks processor from syscall operating thread and link it with free thread.
+
 
 ![alt text](misc/sysmon.png)
 
@@ -3787,44 +5285,60 @@ Then, once the message is received by the signal handler, the thread is interrup
 
 ![alt text](misc/sysmon2.png)
 
+## [TODO] Goroutines Stack Size
+https://habr.com/ru/companies/otus/articles/527748/
+
+## [TODO] Unix thread context switch and size of OS thread
+
+## [TODO] `GOMAXPROCS`
+
+## [TODO] Why Scheduler Considered Hybrid?
+
+## [TODO] Sysmon
+
+## [TODO] netpoller
+
+## [TODO] Channels vs Locks, Pros and Cons
+
+## [TODO] Channels and `for range` loop
+
+# [TODO] pprof
+
+# [TODO] Benchmarking
+
+# [TODO] In App Architecture
+## [TODO] Where interface should be stored?
+https://youtu.be/eYHCCht8eX4?si=3E8Zh2apGz4xx3Be
+
+## [TODO] Folder Structure
+
+## [TODO] Avito Architecture Guide
+
+## [TODO] Solid and Go
+
+# [TODO] Uber Go Style Guide
+https://github.com/uber-go/guide/blob/master/style.md
+
+# [TODO] Avito Style Guide
+https://docs.k.avito.ru/awesome/go/code-style/
+
+# [TODO] Go Proverbs
+https://go-proverbs.github.io/
+
+# [TODO] Go Patterns
+https://github.com/AlexanderGrom/go-patterns
+
+# [TODO] Go Mistakes
+https://codelibrary.info/books/go/100-oshibok-go-i-kak-ikh-izbezhat
+https://100go.co/
+
 
 ---
 
 TODO:
-1. strings
-2. closure
-3.  marshalling internals
-  - custom marshalling
 11.
-  - CSP communication sequential processes https://habr.com/ru/articles/138700/
-  - select
-  - rwmutex vs mutex
-  - goroutines stack size https://habr.com/ru/companies/otus/articles/527748/
-  - atomics
-  - kqueue (MacOS), epoll (Linux), IOCP (Windows) https://go.dev/src/runtime/netpoll.go
-  - Epoll vs select / poll
   - какие события в дескрипторе можно зарегистрировать
-  - edge-trigger, level-trigger https://go.dev/src/runtime/netpoll.go
-  - non blocking socket
-  - go signals https://medium.com/a-journey-with-go/go-gsignal-master-of-signals-329f7ff39391
-  - unix thread context switch, size of OS thread
-  - GOMAXPROCS
-  - deadlock, race condition and data race
-  - sync.Cond
-  - sync.Once
-  - sync.Map
-  - channels
-    - channels vs locks – pros and cons
-	- write to close channel, write to nil channel
-  - system calls + io system calls
-1.  pprof
-2.  benchmarking
-3.  effective go
-4.  uber go code guideline
-5.  avito go code guideline
-6.  patterns
-7.  go mistakes
-8.  go proverbs https://go-proverbs.github.io/
-9.  go assembler
+1.  patterns
+2.  go mistakes
 
 https://github.com/emluque/golang-internals-resources?tab=readme-ov-file
